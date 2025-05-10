@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">Mental Workload App</string>
-    <string name="title_activity_login">LoginActivity</string>
-    <string name="title_activity_signup">SignupActivity</string>
+    <string name="app_name">Selene</string>
+    <string name="app_logo">App Logo</string>
+    <string name="title_activity_login">Login</string>
+    <string name="title_activity_signup">Signup</string>
 </resources>
