@@ -29,12 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
-import com.example.mentalworkloadapp.ui.theme.MentalWorkloadAppTheme
 import mylibrary.mindrove.ServerManager
 import mylibrary.mindrove.SensorData
 // import mylibrary.mindrove.Instruction // if needed for instructions
 
-class MainActivity : ComponentActivity() {
+class MainActivityHistory : ComponentActivity() {
 
     private val sensorDataDisplay = MutableLiveData("No data yet. Ensure headset is connected via Wi-Fi.")      // LiveData to hold sensor data text for the UI
 
