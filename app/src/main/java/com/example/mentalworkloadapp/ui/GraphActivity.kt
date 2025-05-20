@@ -1,14 +1,12 @@
-package com.example.mentalworkloadapp
+package com.example.mentalworkloadapp.ui
 
-import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import com.example.mentalworkloadapp.R
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -23,7 +21,7 @@ class GraphActivity : ComponentActivity() {
         setContentView(R.layout.graph)
 
         val greeting_text = findViewById<TextView>(R.id.greeting)
-        val sharedPref = getSharedPreferences("SelenePreferences", Context.MODE_PRIVATE)
+        val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
         val username = sharedPref.getString("username", "#user")
         greeting_text.text = "Hi! $username"
 
@@ -98,4 +96,3 @@ class GraphActivity : ComponentActivity() {
         }
     }
 }
-

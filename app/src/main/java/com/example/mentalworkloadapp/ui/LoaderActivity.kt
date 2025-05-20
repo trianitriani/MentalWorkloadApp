@@ -1,15 +1,15 @@
-package com.example.mentalworkloadapp
+package com.example.mentalworkloadapp.ui
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.example.mentalworkloadapp.ui.StartupActivity
 
 class LoaderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val sharedPref = getSharedPreferences("SelenePreferences", Context.MODE_PRIVATE)
+        val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
         val isFirstRun = sharedPref.getBoolean("isFirstRun", true)
         if (isFirstRun){
             // i have to switch activity into startup activity

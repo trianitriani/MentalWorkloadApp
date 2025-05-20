@@ -1,16 +1,12 @@
-package com.example.mentalworkloadapp
+package com.example.mentalworkloadapp.ui
 
-import android.content.Context
-import android.os.Bundle
-import androidx.activity.ComponentActivity
 import android.content.Intent
-import android.content.res.Configuration
-import android.view.View
+import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import com.example.mentalworkloadapp.R
 
 class StartupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,7 +24,7 @@ class StartupActivity : ComponentActivity() {
             } else {
                 // now i have to store the information of the username in the memory of the
                 // application for the next times
-                val sharedPref = getSharedPreferences("SelenePreferences", Context.MODE_PRIVATE)
+                val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
                 val editor = sharedPref.edit()
                 editor.putString("username", username)
                 editor.putBoolean("isFirstRun", false)
