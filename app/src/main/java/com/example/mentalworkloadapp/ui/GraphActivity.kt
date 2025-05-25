@@ -1,11 +1,15 @@
 package com.example.mentalworkloadapp.ui
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.core.content.ContextCompat
 import com.example.mentalworkloadapp.R
+import com.example.mentalworkloadapp.service.EegSamplingService
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -41,6 +45,14 @@ class GraphActivity : ComponentActivity() {
 
         // initialize the graph within data of today
         updateChartForDay(currentDayOffset)
+
+        // starting the service
+        if (!EegSamplingService.isRunning) {
+            val intent = Intent(this, EegSamplingService::class.java)
+            Log.d("EegService", "Prima della chiamata di startForegroundService.")
+            ContextCompat.startForegroundService(this, intent)
+            Log.d("EegService", "Dopo la chiamata di startForegroundService.")
+        }
     }
 
     // update the graph

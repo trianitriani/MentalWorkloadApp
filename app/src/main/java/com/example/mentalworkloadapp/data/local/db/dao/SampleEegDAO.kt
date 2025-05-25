@@ -23,6 +23,12 @@ interface SampleEegDAO {
     @Delete
     fun deleteSamplesEeg(sampleEeg: List<SampleEeg>)
 
+    // query to getting samples after a threshold timestamp
     @Query("SELECT * FROM SampleEeg WHERE timestamp >= :from")
     fun getAllSamplesFrom(from: Long) : List<SampleEeg>
+
+    // query for delete samples before a threshold timestamp
+    @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
+    fun deleteSamplesFrom(thresholdTimestamp: Long)
+
 }

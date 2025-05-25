@@ -36,7 +36,6 @@ import mylibrary.mindrove.SensorData
 class MainActivityHistory : ComponentActivity() {
 
     private val sensorDataDisplay = MutableLiveData("No data yet. Ensure headset is connected via Wi-Fi.")      // LiveData to hold sensor data text for the UI
-
     private val networkStatusDisplay = MutableLiveData("Checking network status...")        // LiveData for network status
 
     // Instantiate ServerManager with a callback for handling new data
@@ -84,8 +83,8 @@ class MainActivityHistory : ComponentActivity() {
         networkCheckHandler = Handler(Looper.getMainLooper())
         networkCheckRunnable = Runnable {
             checkNetworkAndManageServer()
-            // Repeat this check periodically
-            networkCheckHandler.postDelayed(networkCheckRunnable, 5000) // Check every 5 seconds
+            // repeat this check periodically
+            networkCheckHandler.postDelayed(networkCheckRunnable, 5000)
         }
 
         // Start the periodic network check
