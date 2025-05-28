@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.example.mentalworkloadapp.R
+import androidx.core.content.edit
 
 class StartupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,10 +26,10 @@ class StartupActivity : ComponentActivity() {
                 // now i have to store the information of the username in the memory of the
                 // application for the next times
                 val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
-                val editor = sharedPref.edit()
-                editor.putString("username", username)
-                editor.putBoolean("isFirstRun", false)
-                editor.apply()
+                sharedPref.edit() {
+                    putString("username", username)
+                    putBoolean("isFirstRun", false)
+                }
                 // now we can change the activity and the user can be see a graph
                 startActivity(Intent(this, GraphActivity::class.java))
                 finish();

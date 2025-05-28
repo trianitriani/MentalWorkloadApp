@@ -75,11 +75,12 @@
 
             <ImageView
                 android:id="@+id/arrow_left"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/ic_arrow_left"
-                android:contentDescription=""
-                android:padding="8dp"
+                android:contentDescription="Day before"
+                android:tint="#7E57C2"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true" />
 
@@ -92,11 +93,12 @@
 
             <ImageView
                 android:id="@+id/arrow_right"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/ic_arrow_right"
-                android:contentDescription="Giorno successivo"
-                android:padding="8dp"
+                android:contentDescription="Next day"
+                android:tint="#7E57C2"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
@@ -117,14 +119,14 @@
         android:background="#FAFAFA"
         android:paddingHorizontal="24dp">
 
-        <!-- Home (attivo, colorato) -->
+        <!-- Graph Button -->
         <ImageView
-            android:id="@+id/nav_home"
+            android:id="@+id/nav_graph"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@drawable/ic_launcher"
-            android:contentDescription="Home"
+            android:src="@drawable/timeline"
+            android:contentDescription="Graph area"
             android:padding="16dp"
             android:tint="#2196F3"
             android:clickable="true"
@@ -132,28 +134,14 @@
 
         <!-- Statistiche -->
         <ImageView
-            android:id="@+id/nav_stats"
+            android:id="@+id/nav_study"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@drawable/ic_launcher"
-            android:contentDescription="Stats"
+            android:src="@drawable/menu_book"
+            android:contentDescription="Study session"
             android:padding="16dp"
             android:tint="#888888"
             android:clickable="true"
             android:focusable="true" />
-
-        <!-- Profilo -->
-        <ImageView
-            android:id="@+id/nav_profile"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_launcher"
-            android:contentDescription="Profile"
-            android:padding="16dp"
-            android:tint="#888888"
-            android:clickable="true"
-            android:focusable="true" />
-    </LinearLayout>
 </LinearLayout>

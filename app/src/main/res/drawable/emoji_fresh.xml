@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+
+    <!-- Faccia -->
+    <path
+        android:fillColor="#FFD93B"
+        android:pathData="M32,2C48.57,2 62,15.43 62,32S48.57,62 32,62 2,48.57 2,32 15.43,2 32,2Z"/>
+
+    <!-- Occhiali -->
+    <path
+        android:fillColor="#333333"
+        android:pathData="M12,24 h10 a5,5 0 0 1 5,5 v4 a5,5 0 0 1 -5,5 h-10 a5,5 0 0 1 -5,-5 v-4 a5,5 0 0 1 5,-5Z"/>
+    <path
+        android:fillColor="#333333"
+        android:pathData="M42,24 h10 a5,5 0 0 1 5,5 v4 a5,5 0 0 1 -5,5 h-10 a5,5 0 0 1 -5,-5 v-4 a5,5 0 0 1 5,-5Z"/>
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="2"
+        android:pathData="M22,28 L42,28"/>
+
+    <!-- Sorriso -->
+    <path
+        android:fillColor="#5A3600"
+        android:pathData="M22,44 Q32,52 42,44"
+        android:strokeWidth="3"
+        android:strokeColor="#5A3600"/>
+</vector>

@@ -46,12 +46,11 @@ class GraphActivity : ComponentActivity() {
         // initialize the graph within data of today
         updateChartForDay(currentDayOffset)
 
-        // starting the service
-        if (!EegSamplingService.isRunning) {
-            val intent = Intent(this, EegSamplingService::class.java)
-            Log.d("EegService", "Prima della chiamata di startForegroundService.")
-            ContextCompat.startForegroundService(this, intent)
-            Log.d("EegService", "Dopo la chiamata di startForegroundService.")
+        // change to study activity if the user click on the button in the footer
+        val navStudy = findViewById<ImageView>(R.id.nav_study)
+        navStudy.setOnClickListener {
+            val intent = Intent(this, StudyActivity::class.java)
+            startActivity(intent)
         }
     }
 

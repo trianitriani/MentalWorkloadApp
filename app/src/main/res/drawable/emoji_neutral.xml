@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp"
+    android:viewportWidth="64" android:viewportHeight="64">
+
+    <!-- Faccia -->
+    <path
+        android:fillColor="#FFD93B"
+        android:pathData="M32,2 C48.57,2 62,15.43 62,32 S48.57,62 32,62 2,48.57 2,32 15.43,2 32,2 Z"/>
+
+    <!-- Occhio sinistro bianco -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M16,26
+            A6,6 0 1,0 28,26
+            A6,6 0 1,0 16,26
+            Z" />
+
+    <!-- Pupilla sinistra nera -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="
+            M19,26
+            A3,3 0 1,0 25,26
+            A3,3 0 1,0 19,26
+            Z" />
+
+    <!-- Occhio destro bianco -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M36,26
+            A6,6 0 1,0 48,26
+            A6,6 0 1,0 36,26
+            Z" />
+
+    <!-- Pupilla destra nera -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="
+            M39,26
+            A3,3 0 1,0 45,26
+            A3,3 0 1,0 39,26
+            Z" />
+
+    <!-- Bocca dritta -->
+    <path
+        android:strokeColor="#5A3600"
+        android:strokeWidth="3"
+        android:pathData="M22,42 H42" />
+</vector>
+
+
+
+
