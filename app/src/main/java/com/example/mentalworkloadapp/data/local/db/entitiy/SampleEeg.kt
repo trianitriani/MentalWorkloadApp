@@ -16,9 +16,10 @@ class SampleEeg(
     @ColumnInfo(name = "channel_c5") val ch_c5: Double,
     @ColumnInfo(name = "channel_c6") val ch_c6: Double,
     @ColumnInfo(name = "channel_right_ear") val ch_r_ear: Double,
-    @ColumnInfo(name = "channel_left_ear") val ch_l_ear: Double
+    @ColumnInfo(name = "channel_left_ear") val ch_l_ear: Double,
+    @ColumnInfo(name = "tiredness") val tiredness: Int
 ) {
-    // --- Campi non salvati nel DB ---
+    // fields not saved in the database
     @Ignore var accelerationX: Double = 0.0
     @Ignore var accelerationY: Double = 0.0
     @Ignore var accelerationZ: Double = 0.0
@@ -28,7 +29,7 @@ class SampleEeg(
     @Ignore var voltage: UInt = 0u
     @Ignore var numberOfMeasurement: UInt = 0u
 
-    // Costruttore completo per uso interno, ignorato da Room
+    // internal constructor ignored by room
     @Ignore
     constructor(
         timestamp: Long,
@@ -40,6 +41,7 @@ class SampleEeg(
         ch_c6: Double,
         ch_r_ear: Double,
         ch_l_ear: Double,
+        tiredness: Int,
         accelerationX: Double,
         accelerationY: Double,
         accelerationZ: Double,
@@ -48,7 +50,7 @@ class SampleEeg(
         angularRateZ: Double,
         voltage: UInt,
         numberOfMeasurement: UInt
-    ) : this(timestamp, ch_c1, ch_c2, ch_c3, ch_c4, ch_c5, ch_c6, ch_r_ear, ch_l_ear) {
+    ) : this(timestamp, ch_c1, ch_c2, ch_c3, ch_c4, ch_c5, ch_c6, ch_r_ear, ch_l_ear, tiredness) {
         this.accelerationX = accelerationX
         this.accelerationY = accelerationY
         this.accelerationZ = accelerationZ
@@ -71,6 +73,7 @@ class SampleEeg(
                 ch_c6 = sensorData.channel6 * 0.045,
                 ch_r_ear = sensorData.channel7 * 0.045,
                 ch_l_ear = sensorData.channel8 * 0.045,
+                tiredness = 0,
                 accelerationX = sensorData.accelerationX * 0.061035 * 0.001,
                 accelerationY = sensorData.accelerationY * 0.061035 * 0.001,
                 accelerationZ = sensorData.accelerationZ * 0.061035 * 0.001,

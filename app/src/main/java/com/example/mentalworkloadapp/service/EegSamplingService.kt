@@ -10,8 +10,15 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.room.Room
+import com.example.mentalworkloadapp.data.local.db.AppDatabase
+import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
+import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mylibrary.mindrove.ServerManager
 import mylibrary.mindrove.SensorData
 import kotlin.math.abs
@@ -19,18 +26,21 @@ import kotlin.math.abs
 class EegSamplingService : Service() {
     companion object {
         var isRunning = false
+        var lastSampling: Long = 0
     }
     private lateinit var networkCheckHandler: Handler
     private lateinit var networkCheckRunnable: Runnable
     private var isServerManagerActive = false
-    private val serverManager = ServerManager { sensorData: SensorData ->
+    private var serverManager = ServerManager { sensorData: SensorData ->
         val sampleEeg = SampleEeg.fromSensorData(sensorData)
-        Log.d("MindRoveService", "EEG CH1: $sampleEeg")
+        lastSampling = sampleEeg.timestamp
         // analyze the data
         if (isDeviceProbablyOnTable(sampleEeg)) {
             Log.d("MindRoveService", "⚠️ EEG sembra abbandonato")
         } else {
-            Log.d("MindRoveService", "EEG funzionaaaaa!!!")
+            // insert the sample in the database of the user
+            saveToDatabase(sampleEeg)
+            Log.d("MindRoveService", "EEG CH1: $sampleEeg")
         }
     }
 
@@ -39,9 +49,9 @@ class EegSamplingService : Service() {
         // here we initialize the connection with the mindrove
         networkCheckHandler = Handler(Looper.getMainLooper())
         networkCheckRunnable = Runnable {
-            checkNetworkAndManageServer()
-            // repeat this check periodically (5s)
-            networkCheckHandler.postDelayed(networkCheckRunnable, 5000)
+            isManageServerReachable()
+            // repeat this check periodically (2s)
+            networkCheckHandler.postDelayed(networkCheckRunnable, 2000)
         }
         EegSamplingNotification(this).createNotificationChannel()
         Log.d("EegService", "Service creato")
@@ -57,6 +67,7 @@ class EegSamplingService : Service() {
         return START_STICKY
     }
 
+    /*
     private fun checkNetworkAndManageServer() {
         if (!isNetworkConnected()) {
             // send to the user a notify to connect the device to the wifi of the mindrove
@@ -74,8 +85,39 @@ class EegSamplingService : Service() {
                 isServerManagerActive = true
             }
         }
+    }*/
+
+    private fun isManageServerReachable() {
+        if (System.currentTimeMillis() - lastSampling  > 1500) {
+            Log.d("EegNetworkService", "Ultimo sampling vecchio.")
+            if (isServerManagerActive) {
+                isServerManagerActive = false
+                serverManager.stop()
+            }
+            try {
+                serverManager.start()
+                isServerManagerActive = true
+            }  catch (e: Exception){
+                Log.e("EegNetworkService", "Errore avviando ServerManager: ${e.message}")
+                // i have to re define the object because is broken
+                serverManager = ServerManager { sensorData: SensorData ->
+                    val sampleEeg = SampleEeg.fromSensorData(sensorData)
+                    lastSampling = sampleEeg.timestamp
+                    if (isDeviceProbablyOnTable(sampleEeg)) {
+                        Log.d("MindRoveService", "⚠️ EEG sembra abbandonato")
+                    } else {
+                        saveToDatabase(sampleEeg)
+                        Log.d("MindRoveService", "EEG CH1: $sampleEeg")
+                    }
+                }
+                EegSamplingNotification(this).showWifiErrorNotification()
+            }
+        } else {
+            Log.d("EegNetworkService", "Connesso.")
+        }
     }
 
+    /*
     private fun isNetworkConnected(): Boolean {
         val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
@@ -88,13 +130,18 @@ class EegSamplingService : Service() {
         val transportInfo = capabilities.transportInfo
         if (transportInfo is WifiInfo) {
             val ssid = transportInfo.ssid?.removePrefix("\"")?.removeSuffix("\"") ?: ""
+            Log.d("EegNetworkService", ssid)
             return ssid.contains("mindrove", ignoreCase = true)
         }
         return false
     }
+    */
 
-    private suspend fun saveToDatabase(eegData: SampleEeg) {
-        TODO()
+    private fun saveToDatabase(eegData: SampleEeg) {
+        val eegDao = DatabaseProvider.getSampleEegDao(context = this)
+        CoroutineScope(Dispatchers.IO).launch {
+            eegDao.insertSampleEeg(eegData)
+        }
     }
 
     private fun isDeviceProbablyOnTable(sampleEeg: SampleEeg): Boolean{

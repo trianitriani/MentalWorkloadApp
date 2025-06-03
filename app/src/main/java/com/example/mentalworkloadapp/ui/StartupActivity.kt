@@ -32,7 +32,7 @@ class StartupActivity : ComponentActivity() {
                 }
                 // now we can change the activity and the user can be see a graph
                 startActivity(Intent(this, GraphActivity::class.java))
-                finish();
+                finish()
             }
         }
     }

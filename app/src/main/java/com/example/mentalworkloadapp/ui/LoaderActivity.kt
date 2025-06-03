@@ -18,6 +18,6 @@ class LoaderActivity : ComponentActivity() {
             // i have to switch activity into graph activity
             startActivity(Intent(this, GraphActivity::class.java))
         }
-        finish();
+        finish()
     }
 }

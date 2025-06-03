@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -80,16 +81,15 @@
                 android:src="@drawable/ic_arrow_left"
                 android:contentDescription="Day before"
                 android:tint="#7E57C2"
-                android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/line_chart"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginHorizontal="8dp" />
+                android:layout_marginHorizontal="8dp"
+                android:layout_weight="1" />
 
             <ImageView
                 android:id="@+id/arrow_right"
@@ -98,7 +98,6 @@
                 android:src="@drawable/ic_arrow_right"
                 android:contentDescription="Next day"
                 android:tint="#7E57C2"
-                android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
@@ -144,4 +143,5 @@
             android:tint="#888888"
             android:clickable="true"
             android:focusable="true" />
+    </LinearLayout>
 </LinearLayout>

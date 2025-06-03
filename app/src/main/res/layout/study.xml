@@ -127,10 +127,10 @@
                 android:orientation="horizontal"
                 android:visibility="gone"
                 android:gravity="center">
-                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:src="@drawable/emoji_fresh" />
-                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" android:src="@drawable/emoji_neutral" />
-                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" android:src="@drawable/emoji_tired" />
-                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" android:src="@drawable/emoji_sleeping" />
+                <ImageView android:id="@+id/emoji_fresh" android:layout_width="48dp" android:layout_height="48dp" android:src="@drawable/emoji_fresh" />
+                <ImageView android:id="@+id/emoji_neutral" android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" android:src="@drawable/emoji_neutral" />
+                <ImageView android:id="@+id/emoji_tired" android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" android:src="@drawable/emoji_tired" />
+                <ImageView android:id="@+id/emoji_sleep" android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp" android:src="@drawable/emoji_sleeping" />
             </LinearLayout>
 
             <!-- Checkbox -->

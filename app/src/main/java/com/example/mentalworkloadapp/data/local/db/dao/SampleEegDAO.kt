@@ -7,28 +7,33 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
+import kotlin.reflect.KClass
 
 @Dao
 interface SampleEegDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertSampleEeg(vararg samplesEgg: SampleEeg)
+    suspend fun insertSampleEeg(vararg samplesEgg: SampleEeg)
     @Insert
-    fun insertSamplesEeg(samplesEeg: List<SampleEeg>)
+    suspend fun insertSamplesEeg(samplesEeg: List<SampleEeg>)
 
     @Update
-    fun updateSamplesEeg(vararg samplesEeg: SampleEeg)
+    suspend fun updateSamplesEeg(vararg samplesEeg: SampleEeg)
 
     @Delete
-    fun deleteSamplesEeg(vararg samplesEeg: SampleEeg)
+    suspend fun deleteSamplesEeg(vararg samplesEeg: SampleEeg)
     @Delete
-    fun deleteSamplesEeg(sampleEeg: List<SampleEeg>)
+    suspend fun deleteSamplesEeg(sampleEeg: List<SampleEeg>)
 
     // query to getting samples after a threshold timestamp
     @Query("SELECT * FROM SampleEeg WHERE timestamp >= :from")
-    fun getAllSamplesFrom(from: Long) : List<SampleEeg>
+    suspend fun getAllSamplesFrom(from: Long) : List<SampleEeg>
 
     // query for delete samples before a threshold timestamp
     @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
-    fun deleteSamplesFrom(thresholdTimestamp: Long)
+    suspend fun deleteSamplesFrom(thresholdTimestamp: Long)
+
+    // query for setting the tiredness when a user vote
+    @Query("UPDATE SampleEeg SET tiredness = :newTiredness WHERE timestamp >= :since")
+    suspend fun updateTirednessSince(newTiredness: Int, since: Long)
 
 }

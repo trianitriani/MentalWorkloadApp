@@ -42,6 +42,7 @@
         </activity>
         <activity android:name=".ui.StartupActivity" />
         <activity android:name=".ui.GraphActivity" />
+        <activity android:name=".ui.StudyActivity" />
     </application>
 
 </manifest>

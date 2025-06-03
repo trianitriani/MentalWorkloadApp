@@ -15,6 +15,7 @@ class EegSamplingNotification(private val context: Context) {
     companion object {
         const val CHANNEL_ID = "eeg_sampling_channel"
         const val NOTIF_ID = 1
+        const val WIFI_ERROR_NOTIF_ID = 2
     }
 
     fun createNotification(): Notification {
@@ -38,6 +39,30 @@ class EegSamplingNotification(private val context: Context) {
 
         notification.flags = notification.flags or Notification.FLAG_NO_CLEAR
         return notification
+    }
+
+    fun showWifiErrorNotification() {
+        val notificationManager = context.getSystemService(NotificationManager::class.java) as NotificationManager
+
+        // Controlla se la notifica è già visibile
+        val isAlreadyShown = notificationManager.activeNotifications.any { it.id == WIFI_ERROR_NOTIF_ID }
+        if (isAlreadyShown) return
+
+        val wifiSettingsIntent = Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+        val pendingIntent = PendingIntent.getActivity(
+            context, 0, wifiSettingsIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setContentTitle("Connessione Wi-Fi necessaria")
+            .setContentText("Per favore connettiti alla rete Wi-Fi mindrove")
+            .setSmallIcon(R.drawable.ic_small_notification)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        notificationManager.notify(WIFI_ERROR_NOTIF_ID, notification)
     }
 
     fun createNotificationChannel() {
