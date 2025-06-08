@@ -1,6 +1,6 @@
 <resources>
     <!-- Header -->
-    <string name="greeting">Hi %1$s</string>
+    <string name="greeting">Dzen dobri %1$s</string>
 
     <!-- Startup -->
     <string name="descrizione_app">Track your focus and pause at the best moment!</string>

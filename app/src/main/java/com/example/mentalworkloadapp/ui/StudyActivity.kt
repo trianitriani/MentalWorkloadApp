@@ -23,7 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class StudyActivity : ComponentActivity() {
+class StudyActivity : BaseActivity() {
     private lateinit var buttonStart: Button
     private lateinit var buttonEnd: Button
     private lateinit var emojiContainer: LinearLayout
@@ -167,5 +167,4 @@ class StudyActivity : ComponentActivity() {
         goToRest()
         Log.d("Session Study", "I vote $vote")
     }
-
 }

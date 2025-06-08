@@ -9,7 +9,7 @@ import androidx.activity.ComponentActivity
 import com.example.mentalworkloadapp.R
 import androidx.core.content.edit
 
-class StartupActivity : ComponentActivity() {
+class StartupActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.startup)

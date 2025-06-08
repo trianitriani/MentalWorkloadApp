@@ -10,26 +10,39 @@ import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import com.example.mentalworkloadapp.R
 import com.example.mentalworkloadapp.service.EegSamplingService
+import com.example.mentalworkloadapp.util.LanguageUtil
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 
-class GraphActivity : ComponentActivity() {
+class GraphActivity : BaseActivity() {
     private lateinit var lineChart: LineChart
     private var currentDayOffset = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.graph)
-
-        val greeting_text = findViewById<TextView>(R.id.greeting)
         val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
         val username = sharedPref.getString("username", "#user")
-        greeting_text.text = "Hi! $username"
+        findViewById<TextView>(R.id.greeting).text = getString(R.string.greeting, username)
+        
+        findViewById<ImageView>(R.id.flag_it).setOnClickListener {
+            LanguageUtil.setLocale(this, "it")
+            recreate()
+        }
 
-        // Trova il grafico nella view
+        findViewById<ImageView>(R.id.flag_en).setOnClickListener {
+            LanguageUtil.setLocale(this, "en")
+            recreate()
+        }
+
+        findViewById<ImageView>(R.id.flag_pl).setOnClickListener {
+            LanguageUtil.setLocale(this, "pl")
+            recreate()
+        }
+
         lineChart = findViewById(R.id.line_chart)
 
         // arrows to change the day of the graph

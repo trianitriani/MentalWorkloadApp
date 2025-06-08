@@ -9,6 +9,10 @@ android {
     namespace = "com.example.mentalworkloadapp"
     compileSdk = 35
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     defaultConfig {
         applicationId = "com.example.mentalworkloadapp"
         minSdk = 29

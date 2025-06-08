@@ -65,7 +65,7 @@
             android:ems="5"
             android:layout_marginTop="15dp"
             android:inputType="text"
-            android:text="Insert your name"
+            android:hint="Insert your name"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -74,9 +74,12 @@
         <!-- Start button -->
         <Button
             android:id="@+id/start_button"
+            android:textSize="20dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Start."
+            android:layout_marginTop="10dp"
+            android:background="@drawable/rounded_button_purple"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"

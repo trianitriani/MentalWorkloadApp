@@ -1,21 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#FFFFFF">
 
     <!-- Header -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/header"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
         android:gravity="center_vertical"
-        android:background="#F5F5F5">
+        android:background="#F5F5F5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:weightSum="1">
 
+        <!-- Logo -->
         <ImageView
             android:id="@+id/logo"
             android:layout_width="40dp"
@@ -23,29 +28,62 @@
             android:src="@drawable/ic_launcher"
             android:contentDescription="Logo" />
 
+        <!-- Greeting -->
+        <TextView
+            android:id="@+id/greeting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Hi! #username"
+            android:textColor="#333333"
+            android:textSize="18sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <!-- Spacer -->
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <TextView
-            android:id="@+id/greeting"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:text="Hi! #username"
-            android:textColor="#333333"
-            android:textSize="18sp" />
+        <!-- Flag: English -->
+        <ImageView
+            android:id="@+id/flag_en"
+            android:layout_width="32dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/flag_en"
+            android:contentDescription="English" />
+
+        <!-- Flag: Italian -->
+        <ImageView
+            android:id="@+id/flag_it"
+            android:layout_width="32dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="4dp"
+            android:src="@drawable/flag_it"
+            android:contentDescription="Italian" />
+
+        <!-- Flag: Polish -->
+        <ImageView
+            android:id="@+id/flag_pl"
+            android:layout_width="32dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="4dp"
+            android:src="@drawable/flag_pl"
+            android:contentDescription="Polish" />
     </LinearLayout>
 
-    <!-- Sezione con grafico e frecce -->
-    <!-- Contenitore centrale -->
+    <!-- Contenuto centrale: Grafico e frecce -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/chart_section"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Spazio sopra -->
         <Space
@@ -58,12 +96,12 @@
             android:id="@+id/chart_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Daily mental workload [Today]"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#333333"
             android:layout_gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:text="Daily mental workload [Today]"
+            android:textColor="#333333"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <!-- Riga con frecce e grafico -->
         <LinearLayout
@@ -76,28 +114,28 @@
 
             <ImageView
                 android:id="@+id/arrow_left"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
                 android:src="@drawable/ic_arrow_left"
                 android:contentDescription="Day before"
-                android:tint="#7E57C2"
+                android:tint="@color/black"
                 android:clickable="true"
                 android:focusable="true" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/line_chart"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="8dp"
                 android:layout_weight="1" />
 
             <ImageView
                 android:id="@+id/arrow_right"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
                 android:src="@drawable/ic_arrow_right"
                 android:contentDescription="Next day"
-                android:tint="#7E57C2"
+                android:tint="@color/black"
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
@@ -111,12 +149,16 @@
 
     <!-- Footer con icone -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/footer"
+        android:layout_width="0dp"
         android:layout_height="60dp"
         android:orientation="horizontal"
         android:gravity="center"
         android:background="#FAFAFA"
-        android:paddingHorizontal="24dp">
+        android:paddingHorizontal="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Graph Button -->
         <ImageView
@@ -144,4 +186,4 @@
             android:clickable="true"
             android:focusable="true" />
     </LinearLayout>
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
