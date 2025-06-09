@@ -1,28 +1,39 @@
 <resources>
+    <string name="app_name">Selene</string>
     <!-- Header -->
     <string name="greeting">Ciao %1$s</string>
+    <string name="italian_flag">Bandiera italiana</string>
+    <string name="english_flag">Bandiera inglese</string>
+    <string name="polish_flag">Bandiera polacca</string>
+
+    <!-- Footer -->
+    <string name="graph_page">Area grafo</string>
+    <string name="study_page">Area studio</string>
 
     <!-- Startup -->
-    <string name="descrizione_app">Track your focus and pause at the best moment!</string>
-    <string name="hint_startup">Insert your name</string>
-    <string name="button_startup">Start.</string>
+    <string name="descrizione_app">Tieni traccia della tua concentrazione e fai pausa nel momento giusto!</string>
+    <string name="hint_startup">Inserisci il tuo nome</string>
+    <string name="button_startup">Comincia.</string>
 
     <!-- Graph -->
-    <string name="title_today">Daily mental workload [Today]</string>
-    <string name="title_yesterday">Daily mental workload [Yesterday]</string>
-    <string name="title_monday">Daily mental workload [Monday]</string>
-    <string name="title_tuesday">Daily mental workload [Tuesday]</string>
-    <string name="title_wednesday">Daily mental workload [Wednesday]</string>
-    <string name="title_thursday">Daily mental workload [Thursday]</string>
-    <string name="title_friday">Daily mental workload [Friday]</string>
-    <string name="title_saturday">Daily mental workload [Saturday]</string>
-    <string name="title_sunday">Daily mental workload [Sunday]</string>
+    <string name="title_today">Carico mentale giornaliero [Oggi]</string>
+    <string name="title_yesterday">Carico mentale giornaliero [Ieri]</string>
+    <string name="title_monday">Carico mentale giornaliero [Lunedì]</string>
+    <string name="title_tuesday">Carico mentale giornaliero [Martedì]</string>
+    <string name="title_wednesday">Carico mentale giornaliero [Mercoledì]</string>
+    <string name="title_thursday">Carico mentale giornaliero [Giovedì]</string>
+    <string name="title_friday">Carico mentale giornaliero [Venerdì]</string>
+    <string name="title_saturday">Carico mentale giornaliero [Sabato]</string>
+    <string name="title_sunday">Carico mentale giornaliero [Domenica]</string>
+    <string name="day_before">Giorno precedente</string>
+    <string name="day_next">Giorno successivo</string>
+    <string name="description_graph">Livello di carico mentale monitorato durante il giorno</string>
 
     <!-- Study -->
-    <string name="title">My session of study</string>
-    <string name="subtitle">Click the first button when you start studying. Make sure the Mindrove is turned on, your device is connected to its wifi and you are wearing it correctly. If for some reason you stop studying, click the button on the right to end your study session, and the Mindrove will stop acquiring data from you!</string>
-    <string name="btn_start">Start session</string>
-    <string name="btn_stop">Stop, I\'m tired</string>
-    <string name="checkbox_notification">Let me advise you when to take a break.</string>
-    <string name="checkbox_feedback">Let me help you improve your recommendations.</string>
+    <string name="title">"La mia sessione di studio "</string>
+    <string name="subtitle">Clicca sul primo pulsante quando inizi a studiare. Assicurati che Mingrove sia acceso, che il dispositivo sia connesso al Wi-Fi e che lo indossi correttamente. Se per qualche motivo interrompi lo studio, clicca sul pulsante a destra per terminare la sessione e Mindrove smetterà di acquisire dati da te!</string>
+    <string name="btn_start">Inizia a studiare</string>
+    <string name="btn_stop">Basta, sono stanco</string>
+    <string name="checkbox_notification">Consigliami quando fare una pausa.</string>
+    <string name="checkbox_feedback">Lascia che ti aiuti a migliorare i consigli.</string>
 </resources>

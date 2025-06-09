@@ -1,6 +1,16 @@
 <resources>
+    <!-- Metadata -->
+    <string name="app_name">Selene</string>
+
     <!-- Header -->
     <string name="greeting">Hi %1$s</string>
+    <string name="italian_flag">Italian flag</string>
+    <string name="english_flag">English flag</string>
+    <string name="polish_flag">Polish flag</string>
+
+    <!-- Footer -->
+    <string name="graph_page">Graph page</string>
+    <string name="study_page">Study page</string>
 
     <!-- Startup -->
     <string name="descrizione_app">Track your focus and pause at the best moment!</string>
@@ -17,6 +27,9 @@
     <string name="title_friday">Daily mental workload [Friday]</string>
     <string name="title_saturday">Daily mental workload [Saturday]</string>
     <string name="title_sunday">Daily mental workload [Sunday]</string>
+    <string name="day_before">Day before</string>
+    <string name="day_next">Next day</string>
+    <string name="description_graph">Mental load level monitored during the day</string>
 
     <!-- Study -->
     <string name="title">My session of study</string>
@@ -24,5 +37,5 @@
     <string name="btn_start">Start session</string>
     <string name="btn_stop">Stop, I\'m tired</string>
     <string name="checkbox_notification">Let me advise you when to take a break.</string>
-    <string name="checkbox_feedback">Let me help you improve your recommendations.</string>
+    <string name="checkbox_feedback">Let me help you improve the recommendations.</string>
 </resources>

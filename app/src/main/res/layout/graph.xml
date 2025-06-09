@@ -26,7 +26,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_launcher"
-            android:contentDescription="Logo" />
+            android:contentDescription="@string/app_name" />
 
         <!-- Greeting -->
         <TextView
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Hi! #username"
+            android:text="@string/greeting"
             android:textColor="#333333"
             android:textSize="18sp"
             android:fontFamily="sans-serif-medium" />
@@ -52,7 +52,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="8dp"
             android:src="@drawable/flag_en"
-            android:contentDescription="English" />
+            android:contentDescription="@string/english_flag" />
 
         <!-- Flag: Italian -->
         <ImageView
@@ -61,7 +61,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="4dp"
             android:src="@drawable/flag_it"
-            android:contentDescription="Italian" />
+            android:contentDescription="@string/italian_flag" />
 
         <!-- Flag: Polish -->
         <ImageView
@@ -70,7 +70,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="4dp"
             android:src="@drawable/flag_pl"
-            android:contentDescription="Polish" />
+            android:contentDescription="@string/polish_flag" />
     </LinearLayout>
 
     <!-- Contenuto centrale: Grafico e frecce -->
@@ -98,7 +98,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginBottom="8dp"
-            android:text="Daily mental workload [Today]"
+            android:text="@string/title_today"
             android:textColor="#333333"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -117,7 +117,7 @@
                 android:layout_width="35dp"
                 android:layout_height="35dp"
                 android:src="@drawable/ic_arrow_left"
-                android:contentDescription="Day before"
+                android:contentDescription="@string/day_before"
                 android:tint="@color/black"
                 android:clickable="true"
                 android:focusable="true" />
@@ -134,7 +134,7 @@
                 android:layout_width="35dp"
                 android:layout_height="35dp"
                 android:src="@drawable/ic_arrow_right"
-                android:contentDescription="Next day"
+                android:contentDescription="@string/day_next"
                 android:tint="@color/black"
                 android:clickable="true"
                 android:focusable="true" />
@@ -167,7 +167,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:src="@drawable/timeline"
-            android:contentDescription="Graph area"
+            android:contentDescription="@string/graph_page"
             android:padding="16dp"
             android:tint="#2196F3"
             android:clickable="true"
@@ -180,7 +180,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:src="@drawable/menu_book"
-            android:contentDescription="Study session"
+            android:contentDescription="@string/study_page"
             android:padding="16dp"
             android:tint="#888888"
             android:clickable="true"

@@ -26,7 +26,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_launcher"
-            android:contentDescription="Logo" />
+            android:contentDescription="@string/app_name" />
 
         <!-- Greeting -->
         <TextView
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Hi! #username"
+            android:text="@string/greeting"
             android:textColor="#333333"
             android:textSize="18sp"
             android:fontFamily="sans-serif-medium" />
@@ -52,7 +52,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="8dp"
             android:src="@drawable/flag_en"
-            android:contentDescription="English" />
+            android:contentDescription="@string/english_flag" />
 
         <!-- Flag: Italian -->
         <ImageView
@@ -61,7 +61,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="4dp"
             android:src="@drawable/flag_it"
-            android:contentDescription="Italian" />
+            android:contentDescription="@string/italian_flag" />
 
         <!-- Flag: Polish -->
         <ImageView
@@ -70,7 +70,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="4dp"
             android:src="@drawable/flag_pl"
-            android:contentDescription="Polish" />
+            android:contentDescription="@string/polish_flag" />
     </LinearLayout>
 
     <!-- Contenuto centrale -->
@@ -101,7 +101,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
-                android:text="My session of study"
+                android:text="@string/title"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="#000000" />
@@ -112,7 +112,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:text="Click the first button when you start studying. Make sure the Mindrove is turned on, your device is connected to its wifi and you are wearing it correctly. If for some reason you stop studying, click the button on the right to end your study session, and the Mindrove will stop acquiring data from you!"
+                android:text="@string/subtitle"
                 android:textAlignment="center"
                 android:textColor="#666666"
                 android:textSize="16sp" />
@@ -133,7 +133,7 @@
                     android:backgroundTint="#7E57C2"
                     android:enabled="true"
                     android:background="@drawable/rounded_button_purple"
-                    android:text="Start session"
+                    android:text="@string/btn_start"
                     android:textColor="#FFFFFF" />
 
                 <Space
@@ -148,7 +148,7 @@
                     android:background="@drawable/rounded_button_purple"
                     android:backgroundTint="#E53935"
                     android:enabled="false"
-                    android:text="Stop, I'm tired"
+                    android:text="@string/btn_stop"
                     android:textColor="#FFFFFF" />
             </LinearLayout>
 
@@ -176,7 +176,7 @@
                 android:minHeight="48dp"
                 android:paddingLeft="5dp"
                 android:button="@drawable/checkbox_selector"
-                android:text="Let me advise you when to take a break."
+                android:text="@string/checkbox_notification"
                 android:textColor="#555555" />
 
             <CheckBox
@@ -186,7 +186,7 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:paddingLeft="5dp"
-                android:text="Let me help you improve your recommendations."
+                android:text="@string/checkbox_feedback"
                 android:textColor="#555555"
                 android:minHeight="48dp"
                 android:button="@drawable/checkbox_selector"
@@ -214,7 +214,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:src="@drawable/timeline"
-            android:contentDescription="Graph area"
+            android:contentDescription="@string/graph_page"
             android:padding="16dp"
             android:tint="#888888"
             android:clickable="true"
@@ -226,7 +226,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:src="@drawable/menu_book"
-            android:contentDescription="Study session"
+            android:contentDescription="@string/study_page"
             android:padding="16dp"
             android:tint="#2196F3"
             android:clickable="true"

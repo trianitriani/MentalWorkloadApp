@@ -16,6 +16,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
+import java.util.Calendar
 
 class GraphActivity : BaseActivity() {
     private lateinit var lineChart: LineChart
@@ -84,7 +85,7 @@ class GraphActivity : BaseActivity() {
         else left_arrow.visibility = View.VISIBLE
 
         // now we setup the legend graph
-        val dataSet = LineDataSet(entries, "Mental workload per hours during the day")
+        val dataSet = LineDataSet(entries, this.getString(R.string.description_graph))
         dataSet.color = ColorTemplate.MATERIAL_COLORS[0]
         dataSet.valueTextColor = ColorTemplate.MATERIAL_COLORS[0]
         dataSet.lineWidth = 2f
@@ -113,10 +114,29 @@ class GraphActivity : BaseActivity() {
     // modify the title of the graph dynamically
     private fun generateGraphTitle(offset: Int) {
         val chartTitle = findViewById<TextView>(R.id.chart_title)
-        chartTitle.text = when (offset) {
-            0 -> "Daily mental workload [Today]"
-            -1 -> "Daily mental workload [Yesterday]"
-            else -> "Daily mental workload [$offset]"
+        val context = chartTitle.context
+
+        val calendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, offset)
         }
+
+        val title = when (offset) {
+            0 -> context.getString(R.string.title_today)
+            -1 -> context.getString(R.string.title_yesterday)
+            else -> {
+                when (calendar.get(Calendar.DAY_OF_WEEK)) {
+                    Calendar.MONDAY -> context.getString(R.string.title_monday)
+                    Calendar.TUESDAY -> context.getString(R.string.title_tuesday)
+                    Calendar.WEDNESDAY -> context.getString(R.string.title_wednesday)
+                    Calendar.THURSDAY -> context.getString(R.string.title_thursday)
+                    Calendar.FRIDAY -> context.getString(R.string.title_friday)
+                    Calendar.SATURDAY -> context.getString(R.string.title_saturday)
+                    Calendar.SUNDAY -> context.getString(R.string.title_sunday)
+                    else -> ""
+                }
+            }
+        }
+
+        chartTitle.text = title
     }
 }

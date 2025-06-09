@@ -10,8 +10,10 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
@@ -19,6 +21,7 @@ import androidx.core.content.edit
 import com.example.mentalworkloadapp.R
 import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
 import com.example.mentalworkloadapp.service.EegSamplingService
+import com.example.mentalworkloadapp.util.LanguageUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,6 +34,8 @@ class StudyActivity : BaseActivity() {
     private lateinit var emojiNeutral: ImageView
     private lateinit var emojiTired: ImageView
     private lateinit var emojiSleep: ImageView
+    private lateinit var checkboxNotification: CheckBox
+    private lateinit var checkboxFeedback: CheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,14 +48,36 @@ class StudyActivity : BaseActivity() {
         emojiNeutral = findViewById<ImageView>(R.id.emoji_neutral)
         emojiTired = findViewById<ImageView>(R.id.emoji_tired)
         emojiSleep = findViewById<ImageView>(R.id.emoji_sleep)
+        checkboxNotification = findViewById<CheckBox>(R.id.checkbox_notification)
+        checkboxFeedback = findViewById<CheckBox>(R.id.checkbox_feedback)
+
+        findViewById<ImageView>(R.id.flag_it).setOnClickListener {
+            LanguageUtil.setLocale(this, "it")
+            recreate()
+        }
+
+        findViewById<ImageView>(R.id.flag_en).setOnClickListener {
+            LanguageUtil.setLocale(this, "en")
+            recreate()
+        }
+
+        findViewById<ImageView>(R.id.flag_pl).setOnClickListener {
+            LanguageUtil.setLocale(this, "pl")
+            recreate()
+        }
 
         val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
         // is the phase of the session of study [rest, study, vote]
         val phase = sharedPref.getString("phase", "rest")
         // indicate if the user want to training the model or not
         val voting = sharedPref.getBoolean("voting", true)
+        checkboxFeedback.isChecked = voting
         // indicate if the user want the suggest when do a pause
         val pause = sharedPref.getBoolean("pause", false)
+        checkboxNotification.isChecked = pause
+        // username of the user
+        val username = sharedPref.getString("username", "#user")
+        findViewById<TextView>(R.id.greeting).text = getString(R.string.greeting, username)
 
         // check the visibility and the enable of the component of the page
         if(phase.equals("rest")) goToRest()
@@ -95,10 +122,19 @@ class StudyActivity : BaseActivity() {
                 val intent = Intent(this, EegSamplingService::class.java)
                 stopService(intent)
             }
-            sharedPref.edit() {
-                putString("phase", "vote")
+            // if the user want to vote his session and training the model
+            if(sharedPref.getBoolean("voting", true)){
+                sharedPref.edit() {
+                    putString("phase", "vote")
+                }
+                goToVote()
+            } else {
+                sharedPref.edit() {
+                    putString("phase", "rest")
+                }
+                goToRest()
             }
-            goToVote()
+
         }
 
         // when the user click one emoji, he wants to vote his mental workload at the end
@@ -115,6 +151,15 @@ class StudyActivity : BaseActivity() {
         emojiSleep.setOnClickListener {
             vote(sharedPref, 4)
         }
+
+        checkboxNotification.setOnCheckedChangeListener { _, isChecked ->
+            sharedPref.edit() { putBoolean("pause", isChecked) }
+        }
+
+        checkboxFeedback.setOnCheckedChangeListener { _, isChecked ->
+            sharedPref.edit() { putBoolean("voting", isChecked) }
+        }
+
 
         // change to graph activity if the user click on the button in the footer
         val navGraph = findViewById<ImageView>(R.id.nav_graph)
@@ -159,7 +204,10 @@ class StudyActivity : BaseActivity() {
         val eegDao = DatabaseProvider.getSampleEegDao(context = this)
         val since = System.currentTimeMillis() - 3 * 60 * 1000
         CoroutineScope(Dispatchers.IO).launch {
+            // assign a vote to the last samples (3 minutes from now)
             eegDao.updateTirednessSince(newTiredness = vote, since = since)
+            // remove all the samples without vote
+            eegDao.deleteSamplesWithoutTiredness()
         }
         sharedPref.edit() {
             putString("phase", "rest")
