@@ -28,6 +28,10 @@ interface SampleEegDAO {
     @Query("SELECT * FROM SampleEeg WHERE timestamp >= :from")
     suspend fun getAllSamplesFrom(from: Long) : List<SampleEeg>
 
+    // query to getting all the samples ordered by timestamp
+    @Query("SELECT * FROM SampleEeg ORDER BY timestamp ASC")
+    suspend fun getAllSamplesOrderedByTimestamp(): List<SampleEeg>
+
     // query for delete samples before a threshold timestamp
     @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
     suspend fun deleteSamplesFrom(thresholdTimestamp: Long)
@@ -38,5 +42,4 @@ interface SampleEegDAO {
     // query for setting the tiredness when a user vote
     @Query("UPDATE SampleEeg SET tiredness = :newTiredness WHERE timestamp >= :since")
     suspend fun updateTirednessSince(newTiredness: Int, since: Long)
-
 }
