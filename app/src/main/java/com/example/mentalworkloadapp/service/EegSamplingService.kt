@@ -27,18 +27,23 @@ class EegSamplingService : Service() {
     companion object {
         var isRunning = false
         var lastSampling: Long = 0
+
     }
     private lateinit var networkCheckHandler: Handler
     private lateinit var networkCheckRunnable: Runnable
     private var isServerManagerActive = false
+    var measurementsCounter: Int = 0
+
     private var serverManager = ServerManager { sensorData: SensorData ->
         val sampleEeg = SampleEeg.fromSensorData(sensorData)
         lastSampling = sampleEeg.timestamp
         // analyze the data
         if (isDeviceProbablyOnTable(sampleEeg)) {
             Log.d("MindRoveService", "⚠️ EEG sembra abbandonato")
-        } else {
+        }
+        else {
             // insert the sample in the database of the user
+            //need subsampling
             saveToDatabase(sampleEeg)
             Log.d("MindRoveService", "EEG CH1: $sampleEeg")
         }
@@ -138,9 +143,14 @@ class EegSamplingService : Service() {
     */
 
     private fun saveToDatabase(eegData: SampleEeg) {
-        val eegDao = DatabaseProvider.getSampleEegDao(context = this)
-        CoroutineScope(Dispatchers.IO).launch {
-            eegDao.insertSampleEeg(eegData)
+
+        measurementsCounter++
+
+        if(measurementsCounter % 5 == 0){ //<-- subsampling
+            val eegDao = DatabaseProvider.getSampleEegDao(context = this)
+            CoroutineScope(Dispatchers.IO).launch {
+                eegDao.insertSampleEeg(eegData)
+            }
         }
     }
 
