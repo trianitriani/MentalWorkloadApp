@@ -55,8 +55,8 @@ class EegSamplingNotification(private val context: Context) {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle("Connessione Wi-Fi necessaria")
-            .setContentText("Per favore connettiti alla rete Wi-Fi mindrove")
+            .setContentTitle("Wi-Fi connection required")
+            .setContentText("Please connect to mindrove Wi-Fi")
             .setSmallIcon(R.drawable.ic_small_notification)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
@@ -71,7 +71,7 @@ class EegSamplingNotification(private val context: Context) {
             "EEG Sampling Service",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "Canale per notifica servizio campionamento EEG"
+            description = "Channel for the connection with the eeg"
         }
 
         val notificationManager = context.getSystemService(NotificationManager::class.java) as NotificationManager
