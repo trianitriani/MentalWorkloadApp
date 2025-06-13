@@ -36,6 +36,9 @@
             android:foregroundServiceType="foregroundServiceTypeHealth" />
 
 
+        <!-- Service for the sampling the data -->
+        <service
+            android:name=".service.FineTuningService" />
         <!-- Activities -->
         <!-- Login Activity -->
         <activity

@@ -3,11 +3,16 @@ package com.example.mentalworkloadapp.ui
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.example.mentalworkloadapp.service.FineTuningService
 import com.example.mentalworkloadapp.ui.StartupActivity
 
 class LoaderActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        //try python
+        val serviceIntent = Intent(this, FineTuningService::class.java)
+        startService(serviceIntent)
 
         val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
         val isFirstRun = sharedPref.getBoolean("isFirstRun", true)
