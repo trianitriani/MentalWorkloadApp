@@ -29,6 +29,13 @@
             android:foregroundServiceType="connectedDevice"
             android:stopWithTask="false" />
 
+        <!-- Service for analyzing tiredness level in background -->
+        <service
+            android:name=".service.MentalWorkloadService"
+            android:exported="false"
+            android:foregroundServiceType="foregroundServiceTypeHealth" />
+
+
         <!-- Activities -->
         <!-- Login Activity -->
         <activity
