@@ -8,6 +8,17 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.io.FileInputStream
+import com.example.mentalworkloadapp.data.local.db.AppDatabase
+import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevelEntity
+import com.example.mentalworkloadapp.util.EegFeatureExtractor
+import com.example.mentalworkloadapp.data.repository.EegRepository
+import com.example.mentalworkloadapp.notification.EegSamplingNotification
+import android.app.NotificationManager
+import androidx.core.app.NotificationCompat
+import android.content.Context
+import android.util.Log
+
+
 
 class MentalWorkloadProcessor(
     // Context to access resources and database
@@ -19,11 +30,22 @@ class MentalWorkloadProcessor(
     private val predictions = mutableListOf<Int>() 
     // TensorFlow Lite interpreter to run the model
     private lateinit var interpreter: Interpreter 
+    // DAO of row data
+    private val sampleEegDao = AppDatabase.getDatabase(context).sampleEegDao()
     // DAO to save predictions in DB
     private val dao = AppDatabase.getDatabase(context).predictedLevelDao() 
 
+    private val repository = EegRepository(sampleEegDao)  
+
     // Coroutine job managing the inference loop
     private var job: Job? = null  
+
+    // Variables for notification
+    private val threshold = 2
+    private val nOccurrency = 5
+    private var consecutiveAboveThreshold = 0
+    private var hasNotified = false
+    private val notificationHelper = EegSamplingNotification(context)
 
     // Function to start the periodic inference loop
     fun start() {
@@ -39,7 +61,13 @@ class MentalWorkloadProcessor(
             // Infinite loop as long as coroutine is active
             while (isActive) {
                 // Get the feature vector extracted from the EEG signal
-                val inputVector = EegFeatureExtractor.extractCurrentFeatureVector()
+                val featuresMatrix = repository.getFeaturesMatrixForLastNSeconds(1)  // last 1 seconds
+                if (featuresMatrix.isEmpty()) {
+                    Log.d("MentalWorkloadProcessor", "Features matrix empty, i'm wait one second for the next loop.")
+                    delay(intervalSeconds * 1000)
+                    continue
+                }
+                val inputVector = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
 
                 // Prepare the input buffer for TensorFlow Lite (4 bytes per float)
                 val input = ByteBuffer.allocateDirect(4 * inputVector.size).apply {
@@ -77,6 +105,20 @@ class MentalWorkloadProcessor(
 
                     // Insert the prediction into the Room database
                     dao.insert(PredictedLevelEntity(timestamp = timestamp, livelloStanchezza = mostFrequent))
+
+                    // Check for consecutive predictions above threshold
+                    if (mostFrequent >= threshold) {
+                        consecutiveAboveThreshold++
+                        // Se ha raggiunto il numero richiesto e non ha già notificato
+                        if (consecutiveAboveThreshold >= nOccurrency && !hasNotified) {
+                            // Invia notifica
+                            sendFatigueNotification()
+                            hasNotified = true // evita notifiche duplicate
+                        }
+                    } else {
+                        consecutiveAboveThreshold = 0
+                        hasNotified = false // resetta se torna sotto soglia
+                    }
 
                     // Clear the list to start collecting the next 5 predictions
                     predictions.clear()
@@ -116,4 +158,19 @@ class MentalWorkloadProcessor(
             fileDescriptor.declaredLength     
         )
     }
+
+    private fun sendFatigueNotification() {
+        notificationHelper.createNotificationChannel()
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notification = NotificationCompat.Builder(context, EegSamplingNotification.CHANNEL_ID)
+            .setContentTitle("Mental Fatigue Alert")
+            .setContentText("High mental workload detected for extended period.")
+            .setSmallIcon(R.drawable.ic_small_notification)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+        notificationManager.notify(1001, notification)
+    }
+
 }

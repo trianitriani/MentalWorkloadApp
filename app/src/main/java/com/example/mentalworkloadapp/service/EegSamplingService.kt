@@ -16,6 +16,7 @@ import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
 import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
+import com.example.mentalworkloadapp.service.mentalWorkloadProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,6 +34,8 @@ class EegSamplingService : Service() {
     private lateinit var networkCheckRunnable: Runnable
     private var isServerManagerActive = false
     var measurementsCounter: Int = 0
+    private var mentalWorkloadProcessor: MentalWorkloadProcessor? = null
+    private var inferenceStarted = false
 
     private var serverManager = ServerManager { sensorData: SensorData ->
         val sampleEeg = SampleEeg.fromSensorData(sensorData)
@@ -59,6 +62,7 @@ class EegSamplingService : Service() {
             networkCheckHandler.postDelayed(networkCheckRunnable, 2000)
         }
         EegSamplingNotification(this).createNotificationChannel()
+        mentalWorkloadProcessor = MentalWorkloadProcessor(context = this, intervalSeconds = 1L)
         Log.d("EegService", "Service creato")
     }
 
@@ -98,6 +102,9 @@ class EegSamplingService : Service() {
             if (isServerManagerActive) {
                 isServerManagerActive = false
                 serverManager.stop()
+                // Ferma inferenza
+                mentalWorkloadProcessor?.stop()
+                inferenceStarted = false
             }
             try {
                 serverManager.start()
@@ -119,6 +126,17 @@ class EegSamplingService : Service() {
             }
         } else {
             Log.d("EegNetworkService", "Connesso.")
+            if (!inferenceStarted && isServerManagerActive) {
+                // Attendi 2 secondi e poi avvia inferenza
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(2000)
+                    if (isServerManagerActive) { // conferma che sia ancora connesso
+                        mentalWorkloadProcessor?.start()
+                        inferenceStarted = true
+                        Log.d("EegNetworkService", "Inferenza EEG avviata")
+                    }
+                }
+            }
         }
     }
 
@@ -175,6 +193,8 @@ class EegSamplingService : Service() {
             serverManager.stop()
             isServerManagerActive = false
         }
+        mentalWorkloadProcessor?.stop()
+        mentalWorkloadProcessor?.close()
     }
 }
 
