@@ -1,9 +1,14 @@
 package com.example.mentalworkloadapp.service
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import com.example.mentalworkloadapp.data.local.db.AppDatabase
+import com.example.mentalworkloadapp.data.repository.EegRepository
+import com.example.mentalworkloadapp.util.EegFeatureExtractor
+import kotlinx.coroutines.*
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.io.File
@@ -12,28 +17,46 @@ import java.nio.channels.FileChannel
 
 class FineTuningService : Service() {
 
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Thread {
-            runTrainingAndInference()
-        }.start()
+        serviceScope.launch {
+            try {
+                runTrainingAndInference()
+            } catch (e: Exception) {
+                Log.e("FineTuningService", "Fatal error: ${e.message}", e)
+                stopSelf()
+            }
+        }
         return START_NOT_STICKY
     }
 
-    private fun runTrainingAndInference() {
-        val N_COLUMNS = 10
+    override fun onDestroy() {
+        serviceJob.cancel() // cancel all coroutines when service is destroyed
+        super.onDestroy()
+    }
+
+    private suspend fun runTrainingAndInference() {
+        val sampleEegDao = AppDatabase.getDatabase(this.getSharedPreferences("prefs", Context.MODE_PRIVATE)).sampleEegDao()
+        val repository = EegRepository(sampleEegDao)
+        val N_SESSIONS = 50
+
         try {
-            val modelFile = loadModelFile("4Classes87acc.tflite")
+            val modelFile = loadModelFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
 
-            val xTrain = Array(N_COLUMNS) { FloatArray(90) { 0.1f } } //<--- inputs
-            val yTrain = Array(N_COLUMNS) { FloatArray(1) { 1.0f } }  //<-- labels
-
-            //populating datastructures from database
+            val xTrain = Array(N_SESSIONS) { FloatArray(90) { 0.1f } }
+            val yTrain = Array(N_SESSIONS) { IntArray(1)}
 
 
-            //
+            val featuresMatrix = repository.getFeaturesMatrixForLastNSeconds(1)
+            if (featuresMatrix.isEmpty()) {
+                throw IllegalStateException("Features matrix is empty")
+            }
+            val inputVector = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
 
             val trainInputs = mapOf(
                 "x" to xTrain,
@@ -57,13 +80,13 @@ class FineTuningService : Service() {
             val prediction = (inferOutputs["output"] as FloatArray)[0]
             Log.d("ModelSignature", "Prediction: $prediction")
 
-            //save
+            // Save
             val saveInputs = emptyMap<String, Any>()
             val saveOutputs = mutableMapOf<String, Any>(
-                "w0" to Array(64) { FloatArray(128) },   // dense2 kernel
-                "b0" to FloatArray(64),                 // dense2 bias
-                "w1" to Array(5) { FloatArray(64) },    // output kernel
-                "b1" to FloatArray(5)                   // output bias
+                "w0" to Array(64) { FloatArray(128) },
+                "b0" to FloatArray(64),
+                "w1" to Array(5) { FloatArray(64) },
+                "b1" to FloatArray(5)
             )
 
             interpreter.runSignature(saveInputs, saveOutputs, "save")
