@@ -1,7 +1,7 @@
 package com.example.mentalworkloadapp.data.repository
 
 import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
-import com.example.mentalworkloadapp.domain.features.EegFeatureExtractor
+import com.example.mentalworkloadapp.util.EegFeatureExtractor
 
 class EegRepository(private val dao: SampleEegDAO) {
     // Repository class that encapsulates data access via the DAO

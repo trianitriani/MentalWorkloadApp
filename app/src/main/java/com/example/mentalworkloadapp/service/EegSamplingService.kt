@@ -16,13 +16,14 @@ import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
 import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
-import com.example.mentalworkloadapp.util.mentalWorkloadProcessor
+import com.example.mentalworkloadapp.util.MentalWorkloadProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mylibrary.mindrove.ServerManager
 import mylibrary.mindrove.SensorData
 import kotlin.math.abs
+import kotlinx.coroutines.delay
 
 class EegSamplingService : Service() {
     companion object {

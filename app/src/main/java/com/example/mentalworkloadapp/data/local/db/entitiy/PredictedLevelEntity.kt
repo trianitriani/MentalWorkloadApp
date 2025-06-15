@@ -1,3 +1,4 @@
+package com.example.mentaloadapp.data.local.db.dao.entitiy
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

@@ -9,13 +9,12 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.io.FileInputStream
 import com.example.mentalworkloadapp.data.local.db.AppDatabase
-import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevelEntity
+import com.example.mentalworkloadapp.data.local.db.dao.entitiy.PredictedLevelEntity
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 import com.example.mentalworkloadapp.data.repository.EegRepository
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
 import android.app.NotificationManager
 import androidx.core.app.NotificationCompat
-import android.content.Context
 import android.util.Log
 
 
@@ -35,7 +34,9 @@ class MentalWorkloadProcessor(
     // DAO to save predictions in DB
     private val dao = AppDatabase.getDatabase(context).predictedLevelDao() 
 
-    private val repository = EegRepository(sampleEegDao)  
+    private val repository = EegRepository(sampleEegDao)
+
+    private val notificationHelper = EegSamplingNotification(context)
 
     // Coroutine job managing the inference loop
     private var job: Job? = null  
@@ -52,7 +53,7 @@ class MentalWorkloadProcessor(
     fun start() {
         // Initialize the interpreter if not already initialized
         if (::interpreter.isInitialized.not()) {
-            interpreter = Interpreter(loadModelFile("4Classes87acc.tflite"))
+            interpreter = Interpreter(loadModelFile("model.tflite"))
         }
         // If the job is already active (start was already called), do nothing
         if (job?.isActive == true) return
@@ -155,7 +156,7 @@ class MentalWorkloadProcessor(
         bufferIndex = (bufferIndex + 1) % ringBuffer.size
         insertionCounter++
 
-        // Controlla solo dopo 60 inserimenti
+        // Check only after 60 insertions
         if (insertionCounter == 60) {
             val countAbove = ringBuffer.count { it >= threshold }
             val countBelow = ringBuffer.count { it < threshold }
@@ -163,7 +164,7 @@ class MentalWorkloadProcessor(
             when {
                 countAbove >= 50 -> {
                     if (lastNotificationSent == "fatigue" && skipNextNotification) {
-                        // Salta invio duplicato
+                        // Avoid duplicate submission
                         skipNextNotification = false
                     } else if (lastNotificationSent == "fatigue") {
                         skipNextNotification = true
@@ -176,7 +177,7 @@ class MentalWorkloadProcessor(
 
                 countBelow >= 50 -> {
                     if (lastNotificationSent == "relaxed" && skipNextNotification) {
-                        // Salta invio duplicato
+                        // Avoid duplicate submission
                         skipNextNotification = false
                     } else if (lastNotificationSent == "relaxed") {
                         skipNextNotification = true
@@ -187,10 +188,10 @@ class MentalWorkloadProcessor(
                     }
                 }
 
-                // Nessuna delle due condizioni => non invii niente, mantieni stato
+                // If no conditions are met, do not send anything
             }
 
-            // Reset del contatore per aspettare altri 60
+            // Reset of the counter in order to wait other 60 submissions
             insertionCounter = 0
         }
     }
@@ -214,8 +215,8 @@ class MentalWorkloadProcessor(
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(context, EegSamplingNotification.CHANNEL_ID)
-            .setContentTitle("Mental Fatigue Alert")
-            .setContentText("Now you are relaxed!")
+            .setContentTitle("Low Mental Workload Notification")
+            .setContentText("Now you are fully rested!")
             .setSmallIcon(R.drawable.ic_small_notification)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
