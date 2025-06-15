@@ -3,7 +3,7 @@ package com.example.mentalworkloadapp.data.local.db.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.mentalworkloadapp.entitiy.PredictedLevelEntity
+import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevelEntity
 
 @Dao
 interface PredictedLevelDao {
