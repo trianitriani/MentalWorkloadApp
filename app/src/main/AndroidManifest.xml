@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -30,15 +31,19 @@
             android:stopWithTask="false" />
 
         <!-- Service for analyzing tiredness level in background -->
+        <!--
         <service
             android:name=".service.MentalWorkloadService"
             android:exported="false"
             android:foregroundServiceType="foregroundServiceTypeHealth" />
-
+        -->
 
         <!-- Service for the sampling the data -->
         <service
             android:name=".service.FineTuningService" />
+        <receiver
+            android:name=".service.FineTuningReceiver"
+            android:exported="true" />
         <!-- Activities -->
         <!-- Login Activity -->
         <activity
