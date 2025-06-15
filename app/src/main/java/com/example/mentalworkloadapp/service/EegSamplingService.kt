@@ -16,7 +16,7 @@ import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
 import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
-import com.example.mentalworkloadapp.service.mentalWorkloadProcessor
+import com.example.mentalworkloadapp.util.mentalWorkloadProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -1,4 +1,4 @@
-package com.example.mentalworkloadapp.service
+package com.example.mentalworkloadapp.util
 
 import android.content.Context
 import kotlinx.coroutines.*
@@ -42,10 +42,11 @@ class MentalWorkloadProcessor(
 
     // Variables for notification
     private val threshold = 2
-    private val nOccurrency = 5
-    private var consecutiveAboveThreshold = 0
-    private var hasNotified = false
-    private val notificationHelper = EegSamplingNotification(context)
+    val ringBuffer = IntArray(60)
+    var bufferIndex = 0
+    var insertionCounter = 0
+    var lastNotificationSent: String? = null
+    var skipNextNotification = false
 
     // Function to start the periodic inference loop
     fun start() {
@@ -106,19 +107,8 @@ class MentalWorkloadProcessor(
                     // Insert the prediction into the Room database
                     dao.insert(PredictedLevelEntity(timestamp = timestamp, livelloStanchezza = mostFrequent))
 
-                    // Check for consecutive predictions above threshold
-                    if (mostFrequent >= threshold) {
-                        consecutiveAboveThreshold++
-                        // Se ha raggiunto il numero richiesto e non ha già notificato
-                        if (consecutiveAboveThreshold >= nOccurrency && !hasNotified) {
-                            // Invia notifica
-                            sendFatigueNotification()
-                            hasNotified = true // evita notifiche duplicate
-                        }
-                    } else {
-                        consecutiveAboveThreshold = 0
-                        hasNotified = false // resetta se torna sotto soglia
-                    }
+                    // If 50 times in the last 60 predictions the user is above threshold, it sends notifications
+                    processMostFrequent(mostFrequent, threshold)
 
                     // Clear the list to start collecting the next 5 predictions
                     predictions.clear()
@@ -159,6 +149,52 @@ class MentalWorkloadProcessor(
         )
     }
 
+    fun processMostFrequent(mostFrequent: Int, threshold: Int) {
+        // Inserisci nel buffer circolare
+        ringBuffer[bufferIndex] = mostFrequent
+        bufferIndex = (bufferIndex + 1) % ringBuffer.size
+        insertionCounter++
+
+        // Controlla solo dopo 60 inserimenti
+        if (insertionCounter == 60) {
+            val countAbove = ringBuffer.count { it >= threshold }
+            val countBelow = ringBuffer.count { it < threshold }
+
+            when {
+                countAbove >= 50 -> {
+                    if (lastNotificationSent == "fatigue" && skipNextNotification) {
+                        // Salta invio duplicato
+                        skipNextNotification = false
+                    } else if (lastNotificationSent == "fatigue") {
+                        skipNextNotification = true
+                    } else {
+                        sendFatigueNotification()
+                        lastNotificationSent = "fatigue"
+                        skipNextNotification = false
+                    }
+                }
+
+                countBelow >= 50 -> {
+                    if (lastNotificationSent == "relaxed" && skipNextNotification) {
+                        // Salta invio duplicato
+                        skipNextNotification = false
+                    } else if (lastNotificationSent == "relaxed") {
+                        skipNextNotification = true
+                    } else {
+                        sendRelaxedNotification()
+                        lastNotificationSent = "relaxed"
+                        skipNextNotification = false
+                    }
+                }
+
+                // Nessuna delle due condizioni => non invii niente, mantieni stato
+            }
+
+            // Reset del contatore per aspettare altri 60
+            insertionCounter = 0
+        }
+    }
+
     private fun sendFatigueNotification() {
         notificationHelper.createNotificationChannel()
 
@@ -172,5 +208,20 @@ class MentalWorkloadProcessor(
 
         notificationManager.notify(1001, notification)
     }
+
+    private fun sendRelaxedNotification() {
+        notificationHelper.createNotificationChannel()
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notification = NotificationCompat.Builder(context, EegSamplingNotification.CHANNEL_ID)
+            .setContentTitle("Mental Fatigue Alert")
+            .setContentText("Now you are relaxed!")
+            .setSmallIcon(R.drawable.ic_small_notification)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+        notificationManager.notify(1001, notification)
+    }
+
 
 }
