@@ -9,7 +9,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.io.FileInputStream
 import com.example.mentalworkloadapp.data.local.db.AppDatabase
-import com.example.mentalworkloadapp.data.local.db.dao.entity.PredictedLevelEntity
+import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevelEntity
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 import com.example.mentalworkloadapp.data.repository.EegRepository
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
