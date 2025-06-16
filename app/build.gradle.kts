@@ -71,4 +71,6 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("com.github.wendykierp:JTransforms:3.1")
+    implementation("org.tensorflow:tensorflow-lite:2.14.0") // Use latest
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
 }

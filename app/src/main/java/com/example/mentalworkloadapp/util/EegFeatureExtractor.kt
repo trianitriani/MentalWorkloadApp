@@ -1,4 +1,4 @@
-package com.example.mentalworkloadapp.domain.features
+package com.example.mentalworkloadapp.util
 
 import kotlin.math.*
 import org.jtransforms.fft.DoubleFFT_1D
