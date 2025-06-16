@@ -36,4 +36,5 @@
     <string name="btn_stop">Stop, I\'m tired</string>
     <string name="checkbox_notification">Let me advise you when to take a break.</string>
     <string name="checkbox_feedback">Let me help you improve your recommendations.</string>
+    <string name="training_btn">Training button</string>
 </resources>

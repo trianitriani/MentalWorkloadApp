@@ -36,4 +36,5 @@
     <string name="btn_stop">Basta, sono stanco</string>
     <string name="checkbox_notification">Consigliami quando fare una pausa.</string>
     <string name="checkbox_feedback">Lascia che ti aiuti a migliorare i consigli.</string>
+    <string name="training_btn">Bottone di allenamento</string>
 </resources>

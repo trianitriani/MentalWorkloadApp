@@ -4,11 +4,11 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
-import com.example.mentalworkloadapp.data.local.db.dao.PredictedLevelDao
-import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevelEntity
+import com.example.mentalworkloadapp.data.local.db.dao.PredictedLevelDAO
+import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevel
 
-@Database(entities = [SampleEeg::class, PredictedLevelEntity::class], version = 2)
+@Database(entities = [SampleEeg::class, PredictedLevel::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sampleEegDao(): SampleEegDAO
-    abstract fun predictedLevelDao(): PredictedLevelDao
+    abstract fun predictedLevelDao(): PredictedLevelDAO
 }

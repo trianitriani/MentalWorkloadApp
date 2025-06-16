@@ -9,7 +9,6 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.io.FileInputStream
 import com.example.mentalworkloadapp.data.local.db.AppDatabase
-import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevelEntity
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 import com.example.mentalworkloadapp.data.repository.EegRepository
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
@@ -19,6 +18,7 @@ import androidx.core.app.NotificationCompat
 import android.util.Log
 import com.example.mentalworkloadapp.R
 import android.content.SharedPreferences
+import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevel
 
 
 class MentalWorkloadProcessor(
@@ -108,7 +108,7 @@ class MentalWorkloadProcessor(
                     val timestamp = System.currentTimeMillis() 
 
                     // Insert the prediction into the Room database
-                    dao.insert(PredictedLevelEntity(timestamp = timestamp, livelloStanchezza = mostFrequent))
+                    dao.insert(PredictedLevel(timestamp = timestamp, livelloStanchezza = mostFrequent))
 
                     // If 50 times in the last 60 predictions the user is above threshold, it sends notifications
                     processMostFrequent(mostFrequent, threshold)

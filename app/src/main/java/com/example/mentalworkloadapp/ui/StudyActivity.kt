@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -21,6 +22,7 @@ import androidx.core.content.edit
 import com.example.mentalworkloadapp.R
 import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
 import com.example.mentalworkloadapp.service.EegSamplingService
+import com.example.mentalworkloadapp.service.FineTuningService
 import com.example.mentalworkloadapp.util.LanguageUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +66,17 @@ class StudyActivity : BaseActivity() {
         findViewById<ImageView>(R.id.flag_pl).setOnClickListener {
             LanguageUtil.setLocale(this, "pl")
             recreate()
+        }
+
+        // click for lunching the training in background
+        findViewById<ImageButton>(R.id.btn_weight).setOnClickListener {
+            if (!FineTuningService.isRunning) {
+                val intent = Intent(this, FineTuningService::class.java)
+                ContextCompat.startForegroundService(this, intent)
+                Log.d("Session Study", "Il service per training dovrebbe runnare")
+            } else {
+                Log.d("Session Study", "Il service per training non sta runnando")
+            }
         }
 
         val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
@@ -160,14 +173,14 @@ class StudyActivity : BaseActivity() {
             sharedPref.edit() { putBoolean("voting", isChecked) }
         }
 
-
+        /*
         // change to graph activity if the user click on the button in the footer
         val navGraph = findViewById<ImageView>(R.id.nav_graph)
         navGraph.setOnClickListener {
             val intent = Intent(this, GraphActivity::class.java)
             startActivity(intent)
             finish()
-        }
+        }*/
     }
 
     private fun goToRest(){

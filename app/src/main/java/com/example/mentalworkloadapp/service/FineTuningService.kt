@@ -16,9 +16,10 @@ import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-
 class FineTuningService : Service() {
-
+    companion object {
+        var isRunning = false
+    }
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
@@ -27,6 +28,8 @@ class FineTuningService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         serviceScope.launch {
             try {
+                isRunning = true
+                Log.d("FineTuningService", "startForeground() chiamato")
                 runTrainingAndInference()
             } catch (e: Exception) {
                 Log.e("FineTuningService", "Fatal error: ${e.message}", e)
@@ -37,6 +40,7 @@ class FineTuningService : Service() {
     }
 
     override fun onDestroy() {
+        isRunning = false
         serviceJob.cancel() // cancel all coroutines when service is destroyed
         super.onDestroy()
     }

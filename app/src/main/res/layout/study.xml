@@ -192,6 +192,16 @@
                 android:button="@drawable/checkbox_selector"
                 android:checked="true" />
 
+            <ImageButton
+                android:id="@+id/btn_weight"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                android:src="@drawable/ic_fitness"
+                android:scaleType="centerInside"
+                android:contentDescription="@string/training_btn"
+                android:layout_gravity="center"/>
         </LinearLayout>
     </ScrollView>
 
@@ -208,7 +218,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
+        <!-- ImageView
             android:id="@+id/nav_graph"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -230,6 +240,6 @@
             android:padding="16dp"
             android:tint="#2196F3"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true" / -->
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
