@@ -8,6 +8,9 @@ import android.util.Log
 import com.example.mentalworkloadapp.service.FineTuningReceiver
 import java.util.*
 
+//To schedule the fine tuning callù
+//Scheduler.scheduleFineTuningService( context = this, year = 2025, month = Calendar.JUNE, day = 16, hour = 14, minute = 30 )
+
 object Scheduler {
 
     fun scheduleFineTuningService(context: Context, year: Int, month: Int, day: Int, hour: Int, minute: Int) {
