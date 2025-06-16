@@ -10,10 +10,6 @@ class LoaderActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //try python
-        val serviceIntent = Intent(this, FineTuningService::class.java)
-        startService(serviceIntent)
-
         val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
         val isFirstRun = sharedPref.getBoolean("isFirstRun", true)
         if (isFirstRun){
