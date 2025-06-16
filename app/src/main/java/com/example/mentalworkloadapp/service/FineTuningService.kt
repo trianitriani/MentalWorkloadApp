@@ -42,7 +42,7 @@ class FineTuningService : Service() {
     }
 
     private suspend fun runTrainingAndInference() {
-        val sampleEegDao = DatabaseProvider.getDatabase(this.getSharedPreferences("prefs", Context.MODE_PRIVATE)).sampleEegDao()
+        val sampleEegDao = DatabaseProvider.getDatabase(this).sampleEegDao()
         val repository = EegRepository(sampleEegDao)
         val N_SESSIONS = 50
 
@@ -52,10 +52,18 @@ class FineTuningService : Service() {
 
             val rawDataset= sampleEegDao.getLastSamplesOrderedByTimestamp()
 
+            // Checking if there is enough data
+            if (rawDataset.size < N_SESSIONS) {
+                Log.w("FineTuningService", "Not enough data to run training. Found ${rawDataset.size}, need $N_SESSIONS.")
+                stopSelf() // Stop the service if not enough data
+                return
+            }
+
+
             val yTrain = Array(N_SESSIONS) { IntArray(1)}
 
             for (i in 0 until 50){
-                yTrain[i]=rawDataset[i].tiredness
+                yTrain[i][0] = rawDataset[i].tiredness
             }
 
             val featuresMatrix = repository.getFeaturesMatrixLast50Samples()
