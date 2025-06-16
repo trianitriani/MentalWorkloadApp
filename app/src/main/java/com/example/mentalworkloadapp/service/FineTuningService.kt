@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import com.example.mentalworkloadapp.data.local.db.AppDatabase
+import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
 import com.example.mentalworkloadapp.data.repository.EegRepository
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 import kotlinx.coroutines.*
@@ -41,7 +42,7 @@ class FineTuningService : Service() {
     }
 
     private suspend fun runTrainingAndInference() {
-        val sampleEegDao = AppDatabase.getDatabase(this.getSharedPreferences("prefs", Context.MODE_PRIVATE)).sampleEegDao()
+        val sampleEegDao = DatabaseProvider.getDatabase(this.getSharedPreferences("prefs", Context.MODE_PRIVATE)).sampleEegDao()
         val repository = EegRepository(sampleEegDao)
         val N_SESSIONS = 50
 

@@ -13,10 +13,11 @@ import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevelEntity
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 import com.example.mentalworkloadapp.data.repository.EegRepository
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
+import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
 import android.app.NotificationManager
 import androidx.core.app.NotificationCompat
 import android.util.Log
-
+import com.example.mentalworkloadapp.R
 
 
 class MentalWorkloadProcessor(
@@ -30,9 +31,9 @@ class MentalWorkloadProcessor(
     // TensorFlow Lite interpreter to run the model
     private lateinit var interpreter: Interpreter 
     // DAO of row data
-    private val sampleEegDao = AppDatabase.getDatabase(context).sampleEegDao()
+    private val sampleEegDao = DatabaseProvider.getDatabase(context).sampleEegDao()
     // DAO to save predictions in DB
-    private val dao = AppDatabase.getDatabase(context).predictedLevelDao() 
+    private val dao = DatabaseProvider.getDatabase(context).predictedLevelDao()
 
     private val repository = EegRepository(sampleEegDao)
 
@@ -150,8 +151,9 @@ class MentalWorkloadProcessor(
         )
     }
 
+    // Function that controls if send the notification
     fun processMostFrequent(mostFrequent: Int, threshold: Int) {
-        // Inserisci nel buffer circolare
+        // Insertion in the circular buffer
         ringBuffer[bufferIndex] = mostFrequent
         bufferIndex = (bufferIndex + 1) % ringBuffer.size
         insertionCounter++
@@ -161,68 +163,60 @@ class MentalWorkloadProcessor(
             val countAbove = ringBuffer.count { it >= threshold }
             val countBelow = ringBuffer.count { it < threshold }
 
-            when {
-                countAbove >= 50 -> {
-                    if (lastNotificationSent == "fatigue" && skipNextNotification) {
-                        // Avoid duplicate submission
-                        skipNextNotification = false
-                    } else if (lastNotificationSent == "fatigue") {
-                        skipNextNotification = true
-                    } else {
-                        sendFatigueNotification()
-                        lastNotificationSent = "fatigue"
-                        skipNextNotification = false
-                    }
-                }
-
-                countBelow >= 50 -> {
-                    if (lastNotificationSent == "relaxed" && skipNextNotification) {
-                        // Avoid duplicate submission
-                        skipNextNotification = false
-                    } else if (lastNotificationSent == "relaxed") {
-                        skipNextNotification = true
-                    } else {
-                        sendRelaxedNotification()
-                        lastNotificationSent = "relaxed"
-                        skipNextNotification = false
-                    }
-                }
-
-                // If no conditions are met, do not send anything
+            // Selection of the notification type
+            val notificationType = when {
+                countAbove >= 50 -> "fatigue"
+                countBelow >= 50 -> "relaxed"
+                else -> null
             }
 
-            // Reset of the counter in order to wait other 60 submissions
+            notificationType?.let { type ->
+                if (lastNotificationSent == type && skipNextNotification) {
+                    skipNextNotification = false
+                } else if (lastNotificationSent == type) {
+                    skipNextNotification = true
+                } else {
+                    // Sending the notification
+                    sendNotification(type)
+                    lastNotificationSent = type
+                    skipNextNotification = false
+                }
+            }
+
+            // Reset of the counter
             insertionCounter = 0
         }
     }
 
-    private fun sendFatigueNotification() {
+    // Function that sends the notification
+    private fun sendNotification(type: String) {
+        // Checking if "pause" (checkboxNotification) is set
+        val sharedPref = context.getSharedPreferences("SelenePreferences", Context.MODE_PRIVATE)
+        val isPauseEnabled = sharedPref.getBoolean("pause", false)
+
+        if (!isPauseEnabled) {
+            // If the user doesn't want notifications, it returns without sends anything
+            return
+        }
+
         notificationHelper.createNotificationChannel()
+
+        // Text and title selection
+        val (title, text) = when (type) {
+            "fatigue" -> "Mental Fatigue Alert" to "High mental workload detected for extended period."
+            "relaxed" -> "Low Mental Workload Notification" to "Now you are fully rested!"
+            else -> return // In the case there are mixed values (not 50 values under threshold and not 50 over it)
+        }
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(context, EegSamplingNotification.CHANNEL_ID)
-            .setContentTitle("Mental Fatigue Alert")
-            .setContentText("High mental workload detected for extended period.")
+            .setContentTitle(title)
+            .setContentText(text)
             .setSmallIcon(R.drawable.ic_small_notification)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
         notificationManager.notify(1001, notification)
     }
-
-    private fun sendRelaxedNotification() {
-        notificationHelper.createNotificationChannel()
-
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notification = NotificationCompat.Builder(context, EegSamplingNotification.CHANNEL_ID)
-            .setContentTitle("Low Mental Workload Notification")
-            .setContentText("Now you are fully rested!")
-            .setSmallIcon(R.drawable.ic_small_notification)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
-
-        notificationManager.notify(1001, notification)
-    }
-
 
 }
