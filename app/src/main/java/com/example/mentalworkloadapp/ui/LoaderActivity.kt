@@ -17,7 +17,7 @@ class LoaderActivity : BaseActivity() {
             startActivity(Intent(this, StartupActivity::class.java))
         } else {
             // i have to switch activity into graph activity
-            startActivity(Intent(this, GraphActivity::class.java))
+            startActivity(Intent(this, StudyActivity::class.java))
         }
         finish()
     }
