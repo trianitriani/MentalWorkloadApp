@@ -73,4 +73,6 @@ dependencies {
     implementation("com.github.wendykierp:JTransforms:3.1")
     implementation("org.tensorflow:tensorflow-lite:2.14.0") // Use latest
     implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
+
 }
