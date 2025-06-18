@@ -14,7 +14,7 @@ class EegRepository(private val dao: SampleEegDAO) {
 
         // Calculates how many samples are needed to cover n seconds (e.g., 10s * 100Hz = 1000 samples)
         val samplesNeeded = nSeconds * samplingFreq
-        
+
         // Retrieves all EEG samples from the database ordered by ascending timestamp
         val allSamples = dao.getAllSamplesOrderedByTimestamp()
 
@@ -25,10 +25,10 @@ class EegRepository(private val dao: SampleEegDAO) {
 
         // Takes only the last samplesNeeded samples, i.e., the last n seconds of data
         val recentSamples = allSamples.takeLast(samplesNeeded)
-        
+
         // Initializes a 2D array: 6 EEG channels, each with samplesNeeded double values
         val chData = Array(6) { DoubleArray(samplesNeeded) }
-        
+
         // Extracts the values of the 6 channels for each sample and stores them in chData matrix
         for (i in 0 until samplesNeeded) {
             val sample = recentSamples[i]
@@ -45,23 +45,23 @@ class EegRepository(private val dao: SampleEegDAO) {
         return EegFeatureExtractor.extractFeaturesMatrix(chData, samplingFreq)
     }
 
-    suspend fun getFeaturesMatrixLast50Samples(): Array<FloatArray> {
+    suspend fun getFeaturesMatrixSessionSamples(sessionsSamples:Int,sessionIdx:Int): Array<FloatArray> {
 
         // Retrieves all EEG samples from the database ordered by ascending timestamp
-        val allSamples = dao.getLastSamplesOrderedByTimestamp()
+        val allSamples = dao.getSessionSamplesOrderedByTimestamp(sessionsSamples,sessionIdx)
 
         // Throws an exception if there aren't enough samples to cover the requested period
-        if (allSamples.size < 50) {
+        if (allSamples.size < 180) {
             throw IllegalArgumentException("Not enough data samples in database")
         }
 
         // Takes only the last samplesNeeded samples, i.e., the last n seconds of data
 
         // Initializes a 2D array: 6 EEG channels, each with samplesNeeded double values
-        val chData = Array(6) { DoubleArray(50) }
+        val chData = Array(6) { DoubleArray(180) }
 
         // Extracts the values of the 6 channels for each sample and stores them in chData matrix
-        for (i in 0 until 50) {
+        for (i in 0 until 180) {
             val sample = allSamples[i]
 
             chData[0][i] = sample.ch_c1

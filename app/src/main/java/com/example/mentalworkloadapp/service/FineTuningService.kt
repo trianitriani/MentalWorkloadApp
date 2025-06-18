@@ -16,10 +16,12 @@ import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
+
 class FineTuningService : Service() {
     companion object {
         var isRunning = false
     }
+
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
@@ -28,8 +30,6 @@ class FineTuningService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         serviceScope.launch {
             try {
-                isRunning = true
-                Log.d("FineTuningService", "startForeground() chiamato")
                 runTrainingAndInference()
             } catch (e: Exception) {
                 Log.e("FineTuningService", "Fatal error: ${e.message}", e)
@@ -40,7 +40,6 @@ class FineTuningService : Service() {
     }
 
     override fun onDestroy() {
-        isRunning = false
         serviceJob.cancel() // cancel all coroutines when service is destroyed
         super.onDestroy()
     }
@@ -48,14 +47,14 @@ class FineTuningService : Service() {
     private suspend fun runTrainingAndInference() {
         val sampleEegDao = DatabaseProvider.getDatabase(this).sampleEegDao()
         val repository = EegRepository(sampleEegDao)
-        val N_SESSIONS = 50
+        val N_SESSIONS = 5
 
         try {
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
 
-            val rawDataset= sampleEegDao.getLastSamplesOrderedByTimestamp()
-
+            val rawDataset= sampleEegDao.getSessionSamplesOrderedByTimestamp(limit = 180 * N_SESSIONS, offset = 0)
+            Log.w("test", "Found ${rawDataset.size}, need $N_SESSIONS.")
             // Checking if there is enough data
             if (rawDataset.size < N_SESSIONS) {
                 Log.w("FineTuningService", "Not enough data to run training. Found ${rawDataset.size}, need $N_SESSIONS.")
@@ -64,29 +63,32 @@ class FineTuningService : Service() {
             }
 
 
-            val yTrain = Array(N_SESSIONS) { IntArray(1)}
+            val yTrainArr = Array(N_SESSIONS) { FloatArray(1)}
+            Log.w("test", "Y train created")
 
-            for (i in 0 until 50){
-                yTrain[i][0] = rawDataset[i].tiredness
+            for (i in 0 until 5){
+                yTrainArr[i][0] = rawDataset[180*i].tiredness.toFloat()
             }
-
-            val featuresMatrix = repository.getFeaturesMatrixLast50Samples()
-            if (featuresMatrix.isEmpty()) {
-                throw IllegalStateException("Features matrix is empty")
+            Log.w("test", "Y train initialized")
+            for (i in 0 until N_SESSIONS){
+                val featuresMatrix = repository.getFeaturesMatrixSessionSamples(180,i)
+                if (featuresMatrix.isEmpty()) {
+                    throw IllegalStateException("Features matrix is empty")
+                }
+                val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
+                val yTrain=yTrainArr[i][0]
+                val trainInputs = mapOf(
+                    "x" to xTrain,
+                    "y" to yTrain
+                )
+                val trainOutputs = mutableMapOf<String, Any>(
+                    "loss" to FloatArray(1)
+                )
+                interpreter.runSignature(trainInputs, trainOutputs, "train")
+                Log.w("test", "Train done")
+                stopSelf()
             }
-            val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
-
-            val trainInputs = mapOf(
-                "x" to xTrain,
-                "y" to yTrain
-            )
-            val trainOutputs = mutableMapOf<String, Any>(
-                "loss" to FloatArray(1)
-            )
-
-            //model training
-            interpreter.runSignature(trainInputs, trainOutputs, "train")
-
+            Log.w("test", "Train done")
             //val loss = (trainOutputs["loss"] as FloatArray)[0]
             //Log.d("ModelSignature", "Loss: $loss")
 
