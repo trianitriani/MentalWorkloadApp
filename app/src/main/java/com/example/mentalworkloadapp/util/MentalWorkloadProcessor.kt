@@ -8,6 +8,7 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.io.FileInputStream
+import java.io.File
 import com.example.mentalworkloadapp.data.local.db.AppDatabase
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 import com.example.mentalworkloadapp.data.repository.EegRepository
@@ -19,6 +20,9 @@ import android.util.Log
 import com.example.mentalworkloadapp.R
 import android.content.SharedPreferences
 import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevel
+import com.example.mentalworkloadapp.util.checkPointFileExists
+import com.example.mentalworkloadapp.util.restoreModelFromCheckpointFile
+
 
 
 class MentalWorkloadProcessor(
@@ -55,7 +59,15 @@ class MentalWorkloadProcessor(
     fun start() {
         // Initialize the interpreter if not already initialized
         if (::interpreter.isInitialized.not()) {
+
+            //load base model
             interpreter = Interpreter(loadModelFile("model.tflite"))
+            //check if checkpoint file exists
+            if(checkPointFileExists()){
+                //load personalized model
+                restoreModelFromCheckpointFile(context,interpreter)
+
+            }
         }
         // If the job is already active (start was already called), do nothing
         if (job?.isActive == true) return

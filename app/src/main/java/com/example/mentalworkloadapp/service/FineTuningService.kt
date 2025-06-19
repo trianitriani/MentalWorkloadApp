@@ -16,6 +16,8 @@ import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import android.widget.Toast
+import com.example.mentalworkloadapp.notification.FineTuningNotification
+import android.app.NotificationManager
 
 
 class FineTuningService : Service() {
@@ -23,19 +25,32 @@ class FineTuningService : Service() {
         var isRunning = false
     }
 
+    private lateinit var notificationHelper: FineTuningNotification
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+
+    override fun onCreate() {
+        super.onCreate()
+        notificationHelper = FineTuningNotification(this)
+        notificationHelper.createNotificationChannel()
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        isRunning = true
+        startForeground(FineTuningNotification.NOTIFICATION_ID, notificationHelper.createFineTuningStartedNotification())
+        //when service is started
         serviceScope.launch {
             try {
+                //start fine tuning
                 fineTuning()
             } catch (e: Exception) {
-                Log.e("FineTuningService", "Fatal error: ${e.message}", e)
+                //in case of exceptions
+                notificationHelper.notify(notificationHelper.createGenericErrorNotification())
                 stopSelf()
             } finally {
+                //stop the service
                 stopSelf()
             }
         }
@@ -43,7 +58,9 @@ class FineTuningService : Service() {
     }
 
     override fun onDestroy() {
+        isRunning = false
         serviceJob.cancel() // cancel all coroutines when service is destroyed
+        stopForeground(STOP_FOREGROUND_DETACH)
         super.onDestroy()
     }
 
@@ -60,16 +77,14 @@ class FineTuningService : Service() {
             val sessionsAvailable:Int= (samplesAvailable/18000L).toInt()
             // Checking if there is enough data
             if (sessionsAvailable < 20) {
-                Log.w("FineTuningService", "Session available are less then the treshold. Found ${sessionsAvailable}, threshold is 20")
-                val needeedSessions: Int=20-sessionsAvailable
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@FineTuningService, "Not enough session recorded, other $needeedSessions needed", Toast.LENGTH_SHORT).show()
-                }
+                notificationHelper.notify(
+                    notificationHelper.createNotEnoughDataErrorNotification(20 - sessionsAvailable)
+                )
                 stopSelf() // Stop the service if not enough data
                 return
             }
 
-
+            //for each session
             for (i in 0 until sessionsAvailable){
                 //get the samples from database
                 val rawSamples= sampleEegDao.getSessionSamplesOrderedByTimestamp(limit = 18000, offset = i*18000)
@@ -79,8 +94,9 @@ class FineTuningService : Service() {
                 //extract features from the session samples
                 val featuresMatrix = repository.getFeaturesMatrixSessionSamples(rawSamples)
                 if (featuresMatrix.isEmpty()) {
-                    throw IllegalStateException("Features matrix is empty")
+                    notificationHelper.notify(notificationHelper.createGenericErrorNotification())
                     stopSelf()
+                    return
                 }
                 //flatten the feature matrix
                 val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
@@ -104,23 +120,21 @@ class FineTuningService : Service() {
             val outputs: Map<String, Any> = HashMap()
             interpreter.runSignature(inputs, outputs, "save")
 
-            //deleting the data in the database, not usefull anymore <-- TEMPORARY DISABLED
+            //deleting the data in the database, not useful anymore <-- TEMPORARILY DISABLED
             /*if(sampleEegDao.deleteAllData()<=0){
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@FineTuningService, "Error occurred deleting the database data", Toast.LENGTH_SHORT).show()
                 }
                 stopSelf()
+                return
             }*/
 
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@FineTuningService, "Model improved correctly!", Toast.LENGTH_SHORT).show()
-            }
+            notificationHelper.notify(notificationHelper.createFineTuningSuccessNotification())
 
         } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@FineTuningService, "Error occurred during improvement", Toast.LENGTH_SHORT).show()
-            }
+            notificationHelper.notify(notificationHelper.createGenericErrorNotification())
             stopSelf()
+            return
         }
     }
 
@@ -134,14 +148,6 @@ class FineTuningService : Service() {
                 assetFileDescriptor.declaredLength
             )
         }
-    }
-
-    private fun restoreModelFromCheckpointFile(checkPointFileName: String,interpreter:Interpreter){
-        val outputFile = File(filesDir, checkPointFileName)
-        val inputs: MutableMap<String, Any> = HashMap()
-        inputs["checkpoint_path"] = outputFile.absolutePath
-        val outputs: Map<String, Any> = HashMap()
-        interpreter.runSignature(inputs, outputs, "load_weights")
     }
 
 }
