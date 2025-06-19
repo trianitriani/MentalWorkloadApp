@@ -40,17 +40,7 @@ class EegSamplingService : Service() {
 
     private var serverManager = ServerManager { sensorData: SensorData ->
         val sampleEeg = SampleEeg.fromSensorData(sensorData)
-        lastSampling = sampleEeg.timestamp
-        // analyze the data
-        if (isDeviceProbablyOnTable(sampleEeg)) {
-            Log.d("MindRoveService", "⚠️ EEG sembra abbandonato")
-        }
-        else {
-            // insert the sample in the database of the user
-            //need subsampling
-            saveToDatabase(sampleEeg)
-            Log.d("MindRoveService", "EEG CH1: $sampleEeg")
-        }
+        saveToDatabase(sampleEeg)
     }
 
     override fun onCreate() {
@@ -77,26 +67,6 @@ class EegSamplingService : Service() {
         return START_STICKY
     }
 
-    /*
-    private fun checkNetworkAndManageServer() {
-        if (!isNetworkConnected()) {
-            // send to the user a notify to connect the device to the wifi of the mindrove
-            Log.d("EegNetworkService", "Network NOT available.")
-            if(isServerManagerActive){
-                // stopping the server manager to send the data
-                serverManager.stop()
-                isServerManagerActive = false
-            }
-        } else {
-            if (!isServerManagerActive) {
-                Log.d("EegNetworkService", "Network available, Starting ServerManager.")
-                // starting the server to send the data
-                serverManager.start()
-                isServerManagerActive = true
-            }
-        }
-    }*/
-
     private fun isManageServerReachable() {
         if (System.currentTimeMillis() - lastSampling  > 1500) {
             Log.d("EegNetworkService", "Ultimo sampling vecchio.")
@@ -115,13 +85,7 @@ class EegSamplingService : Service() {
                 // i have to re define the object because is broken
                 serverManager = ServerManager { sensorData: SensorData ->
                     val sampleEeg = SampleEeg.fromSensorData(sensorData)
-                    lastSampling = sampleEeg.timestamp
-                    if (isDeviceProbablyOnTable(sampleEeg)) {
-                        Log.d("MindRoveService", "⚠️ EEG sembra abbandonato")
-                    } else {
-                        saveToDatabase(sampleEeg)
-                        Log.d("MindRoveService", "EEG CH1: $sampleEeg")
-                    }
+                    saveToDatabase(sampleEeg)
                 }
                 EegSamplingNotification(this).showWifiErrorNotification()
             }
@@ -141,45 +105,14 @@ class EegSamplingService : Service() {
         }
     }
 
-    /*
-    private fun isNetworkConnected(): Boolean {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-
-        // check if a connection is related to a wifi
-        if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return false
-
-        // check if a connection is related to mindrove or not
-        val transportInfo = capabilities.transportInfo
-        if (transportInfo is WifiInfo) {
-            val ssid = transportInfo.ssid?.removePrefix("\"")?.removeSuffix("\"") ?: ""
-            Log.d("EegNetworkService", ssid)
-            return ssid.contains("mindrove", ignoreCase = true)
-        }
-        return false
-    }
-    */
-
     private fun saveToDatabase(eegData: SampleEeg) {
-
         measurementsCounter++
-
         if(measurementsCounter % 5 == 0){ //<-- subsampling
             val eegDao = DatabaseProvider.getSampleEegDao(context = this)
             CoroutineScope(Dispatchers.IO).launch {
                 eegDao.insertSampleEeg(eegData)
             }
         }
-    }
-
-    private fun isDeviceProbablyOnTable(sampleEeg: SampleEeg): Boolean{
-        // summarize the total and check if is lower then 5
-        val gyroTotal = abs(sampleEeg.angularRateX) +
-                abs(sampleEeg.angularRateY) +
-                abs(sampleEeg.angularRateZ)
-        Log.d("ServiceOnTable", "gyro: $gyroTotal")
-        return gyroTotal < 5.00
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
