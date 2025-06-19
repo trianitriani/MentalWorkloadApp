@@ -15,6 +15,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import android.widget.Toast
 
 
 class FineTuningService : Service() {
@@ -30,9 +31,11 @@ class FineTuningService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         serviceScope.launch {
             try {
-                runTrainingAndInference()
+                fineTuning()
             } catch (e: Exception) {
                 Log.e("FineTuningService", "Fatal error: ${e.message}", e)
+                stopSelf()
+            } finally {
                 stopSelf()
             }
         }
@@ -44,39 +47,44 @@ class FineTuningService : Service() {
         super.onDestroy()
     }
 
-    private suspend fun runTrainingAndInference() {
+    private suspend fun fineTuning() {
         val sampleEegDao = DatabaseProvider.getDatabase(this).sampleEegDao()
         val repository = EegRepository(sampleEegDao)
-        val N_SESSIONS = 5
 
         try {
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
 
-            val rawDataset= sampleEegDao.getSessionSamplesOrderedByTimestamp(limit = 180 * N_SESSIONS, offset = 0)
-            Log.w("test", "Found ${rawDataset.size}, need $N_SESSIONS.")
+            //getting the number of session available
+            val samplesAvailable=sampleEegDao.countSamples()
+            val sessionsAvailable:Int= (samplesAvailable/18000L).toInt()
             // Checking if there is enough data
-            if (rawDataset.size < N_SESSIONS) {
-                Log.w("FineTuningService", "Not enough data to run training. Found ${rawDataset.size}, need $N_SESSIONS.")
+            if (sessionsAvailable < 20) {
+                Log.w("FineTuningService", "Session available are less then the treshold. Found ${sessionsAvailable}, threshold is 20")
+                val needeedSessions: Int=20-sessionsAvailable
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@FineTuningService, "Not enough session recorded, other $needeedSessions needed", Toast.LENGTH_SHORT).show()
+                }
                 stopSelf() // Stop the service if not enough data
                 return
             }
 
 
-            val yTrainArr = Array(N_SESSIONS) { FloatArray(1)}
-            Log.w("test", "Y train created")
-
-            for (i in 0 until 5){
-                yTrainArr[i][0] = rawDataset[180*i].tiredness.toFloat()
-            }
-            Log.w("test", "Y train initialized")
-            for (i in 0 until N_SESSIONS){
-                val featuresMatrix = repository.getFeaturesMatrixSessionSamples(180,i)
+            for (i in 0 until sessionsAvailable){
+                //get the samples from database
+                val rawSamples= sampleEegDao.getSessionSamplesOrderedByTimestamp(limit = 18000, offset = i*18000)
+                //get label for the current session, get the label of the last sample
+                // in the session
+                val yTrain = rawSamples[0].tiredness.toFloat()
+                //extract features from the session samples
+                val featuresMatrix = repository.getFeaturesMatrixSessionSamples(rawSamples)
                 if (featuresMatrix.isEmpty()) {
                     throw IllegalStateException("Features matrix is empty")
+                    stopSelf()
                 }
+                //flatten the feature matrix
                 val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
-                val yTrain=yTrainArr[i][0]
+                //create data structure to pass to model
                 val trainInputs = mapOf(
                     "x" to xTrain,
                     "y" to yTrain
@@ -84,14 +92,9 @@ class FineTuningService : Service() {
                 val trainOutputs = mutableMapOf<String, Any>(
                     "loss" to FloatArray(1)
                 )
+                //run a training stage
                 interpreter.runSignature(trainInputs, trainOutputs, "train")
-                Log.w("test", "Train done")
-                stopSelf()
             }
-            Log.w("test", "Train done")
-            //val loss = (trainOutputs["loss"] as FloatArray)[0]
-            //Log.d("ModelSignature", "Loss: $loss")
-
 
 
             // Export the trained weights as a checkpoint file.
@@ -101,9 +104,23 @@ class FineTuningService : Service() {
             val outputs: Map<String, Any> = HashMap()
             interpreter.runSignature(inputs, outputs, "save")
 
+            //deleting the data in the database, not usefull anymore <-- TEMPORARY DISABLED
+            /*if(sampleEegDao.deleteAllData()<=0){
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@FineTuningService, "Error occurred deleting the database data", Toast.LENGTH_SHORT).show()
+                }
+                stopSelf()
+            }*/
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@FineTuningService, "Model improved correctly!", Toast.LENGTH_SHORT).show()
+            }
 
         } catch (e: Exception) {
-            Log.e("ModelSignature", "Error during training/inference", e)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@FineTuningService, "Error occurred during improvement", Toast.LENGTH_SHORT).show()
+            }
+            stopSelf()
         }
     }
 
@@ -124,7 +141,7 @@ class FineTuningService : Service() {
         val inputs: MutableMap<String, Any> = HashMap()
         inputs["checkpoint_path"] = outputFile.absolutePath
         val outputs: Map<String, Any> = HashMap()
-        interpreter.runSignature(inputs, outputs, "restore")
+        interpreter.runSignature(inputs, outputs, "load_weights")
     }
 
 }
