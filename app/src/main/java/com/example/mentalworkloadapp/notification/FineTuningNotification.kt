@@ -63,11 +63,13 @@ class FineTuningNotification(private val context: Context) {
 
     fun createGenericErrorNotification(): Notification {
 
+        val largeIcon = BitmapFactory.decodeResource(context.resources, R.drawable.ic_launcher)
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_small_notification)
             .setContentTitle("Selene")
             .setContentText("Model improving process failed")
+            .setLargeIcon(largeIcon)
             .setOngoing(false)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setAutoCancel(true)
@@ -77,11 +79,13 @@ class FineTuningNotification(private val context: Context) {
 
     fun createNotEnoughDataErrorNotification(sessionsNeeded:Int): Notification {
 
+        val largeIcon = BitmapFactory.decodeResource(context.resources, R.drawable.ic_launcher)
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_small_notification)
             .setContentTitle("Selene")
-            .setContentText("Model improving process failed: Not enough data recorded.\nCollect another $sessionsNeeded session")
+            .setContentText("Model improving process failed: Not enough data recorded. Collect another $sessionsNeeded session")
+            .setLargeIcon(largeIcon)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
