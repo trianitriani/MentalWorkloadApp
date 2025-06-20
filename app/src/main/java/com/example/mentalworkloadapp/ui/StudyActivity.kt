@@ -205,7 +205,8 @@ class StudyActivity : BaseActivity() {
         val eegDao = DatabaseProvider.getSampleEegDao(context = this)
         CoroutineScope(Dispatchers.IO).launch {
             // assign a vote to the last samples (180 * 100 samples from now, last 3 minutes)
-            val samples = eegDao.getLastNSamples(180 * 100);
+            val cutoff = System.currentTimeMillis() - 4 * 60 * 1000;
+            val samples = eegDao.getLastNSamplesOfLastSession(180 * 100, cutoff);
             val updatedSamples = samples.map { sample ->
                 SampleEeg (
                     timestamp = sample.timestamp,
