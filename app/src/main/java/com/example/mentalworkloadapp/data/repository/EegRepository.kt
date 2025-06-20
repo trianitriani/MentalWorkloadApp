@@ -1,6 +1,7 @@
 package com.example.mentalworkloadapp.data.repository
 
 import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
+import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 
 class EegRepository(private val dao: SampleEegDAO) {
@@ -45,24 +46,14 @@ class EegRepository(private val dao: SampleEegDAO) {
         return EegFeatureExtractor.extractFeaturesMatrix(chData, samplingFreq)
     }
 
-    suspend fun getFeaturesMatrixSessionSamples(sessionsSamples:Int,sessionIdx:Int): Array<FloatArray> {
-
-        // Retrieves all EEG samples from the database ordered by ascending timestamp
-        val allSamples = dao.getSessionSamplesOrderedByTimestamp(sessionsSamples,sessionIdx)
-
-        // Throws an exception if there aren't enough samples to cover the requested period
-        if (allSamples.size < 180) {
-            throw IllegalArgumentException("Not enough data samples in database")
-        }
-
-        // Takes only the last samplesNeeded samples, i.e., the last n seconds of data
+    suspend fun getFeaturesMatrixSessionSamples(sessionSamples: List<SampleEeg>): Array<FloatArray> {
 
         // Initializes a 2D array: 6 EEG channels, each with samplesNeeded double values
-        val chData = Array(6) { DoubleArray(180) }
+        val chData = Array(6) { DoubleArray(sessionSamples.size) }
 
         // Extracts the values of the 6 channels for each sample and stores them in chData matrix
-        for (i in 0 until 180) {
-            val sample = allSamples[i]
+        for (i in 0 until sessionSamples.size) {
+            val sample = sessionSamples[i]
 
             chData[0][i] = sample.ch_c1
             chData[1][i] = sample.ch_c2

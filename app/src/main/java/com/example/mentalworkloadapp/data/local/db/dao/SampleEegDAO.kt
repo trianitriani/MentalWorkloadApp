@@ -48,14 +48,14 @@ interface SampleEegDAO {
     suspend fun deleteSamplesWithoutTiredness()
 
     // query for setting the tiredness when a user vote
-    @Query("""
-        UPDATE SampleEeg
-        SET tiredness = :newTiredness
-        WHERE timestamp IN (
-            SELECT timestamp FROM SampleEeg
-            ORDER BY timestamp DESC
-            LIMIT 180*100
-        )
-    """)
-    suspend fun updateTirednessSince(newTiredness: Int)
+    @Query("UPDATE SampleEeg SET tiredness = :newTiredness WHERE timestamp >= :since")
+    suspend fun updateTirednessSince(newTiredness: Int, since: Long)
+
+    //query for counting the number of samples available in the database
+    @Query("SELECT COUNT(*) FROM SampleEEg")
+    suspend fun countSamples() : Long
+
+    //query to delete all the data in the database
+    @Query("DELETE FROM SampleEeg")
+    suspend fun deleteAllData() : Int
 }
