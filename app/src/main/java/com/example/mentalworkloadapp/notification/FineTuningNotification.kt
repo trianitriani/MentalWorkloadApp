@@ -24,7 +24,10 @@ class FineTuningNotification(private val context: Context) {
         const val CHANNEL_NAME = "Fine Tuning Service"
         const val CHANNEL_DESCRIPTION = "Channel for fine tuning"
         const val NOTIFICATION_ID = 99
+        private const val TAG = "FineTuningNotification"
     }
+
+    private val notificationManager = NotificationManagerCompat.from(context)
 
     fun createFineTuningStartedNotification(): Notification {
 
@@ -39,6 +42,7 @@ class FineTuningNotification(private val context: Context) {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setAutoCancel(false)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setColor(ContextCompat.getColor(context, R.color.purple_500))
             .build()
     }
     fun createFineTuningSuccessNotification(): Notification {
@@ -50,14 +54,15 @@ class FineTuningNotification(private val context: Context) {
             .setContentTitle("Selene")
             .setContentText("Model correctly improved")
             .setLargeIcon(largeIcon)
-            .setOngoing(true)
+            .setOngoing(false)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setAutoCancel(false)
+            .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
     }
 
     fun createGenericErrorNotification(): Notification {
+
         val largeIcon = BitmapFactory.decodeResource(context.resources, R.drawable.ic_launcher)
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
@@ -65,30 +70,31 @@ class FineTuningNotification(private val context: Context) {
             .setContentTitle("Selene")
             .setContentText("Model improving process failed")
             .setLargeIcon(largeIcon)
-            .setOngoing(true)
+            .setOngoing(false)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setAutoCancel(false)
+            .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
     }
 
     fun createNotEnoughDataErrorNotification(sessionsNeeded:Int): Notification {
+
         val largeIcon = BitmapFactory.decodeResource(context.resources, R.drawable.ic_launcher)
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_small_notification)
             .setContentTitle("Selene")
-            .setContentText("Model improving process failed: Not enough data recorded.\nCollect another $sessionsNeeded session")
+            .setContentText("Model improving process failed: Not enough data recorded. Collect another $sessionsNeeded session")
             .setLargeIcon(largeIcon)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setAutoCancel(false)
+            .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
     }
 
     fun createNotificationChannel() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val manager = context.getSystemService(NotificationManager::class.java)
+        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val manager = context.getSystemService(NotificationManager::class.java) as NotificationManager
             val existingChannel = manager.getNotificationChannel(CHANNEL_ID)
 
             if (existingChannel == null) {
@@ -104,37 +110,29 @@ class FineTuningNotification(private val context: Context) {
         }
     }
 
-    fun showNotification(notification: Notification) {
+    fun showNotification(notification: Notification,notificationId: Int = NOTIFICATION_ID) {
         createNotificationChannel()
 
         // Check notification permission for Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                // Permission is NOT granted — handle appropriately (e.g., show rationale or request permission)
-                Log.w("FineTuningNotification", "Notification permission not granted.")
-                return
-            }
-        }
-
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-    }
-
-    fun notify(notification: Notification) {
         if (!canPostNotifications()) {
-            Log.w("FineTuningNotification", "Notification permission not granted.")
+            Log.w(TAG, "Cannot post notifications - permission not granted")
             return
         }
 
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+        try {
+            notificationManager.notify(notificationId, notification)
+            Log.d(TAG, "Notification posted successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to show notification", e)
+        }
     }
+
 
     fun canPostNotifications(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
-                android.Manifest.permission.POST_NOTIFICATIONS
+                Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
         } else {
             true // Permissions not required pre-Android 13
