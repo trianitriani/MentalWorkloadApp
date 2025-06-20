@@ -7,6 +7,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
+import org.checkerframework.checker.units.qual.Time
+import java.sql.Timestamp
 
 @Dao
 interface SampleEegDAO {
@@ -37,8 +39,13 @@ interface SampleEegDAO {
     @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :limit OFFSET :offset")
     suspend fun getSessionSamplesOrderedByTimestamp(limit:Int , offset: Int): List<SampleEeg>
 
-    @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :count")
-    suspend fun getLastNSamples(count: Int): List<SampleEeg>
+    @Query("""
+        SELECT * FROM SampleEeg 
+        WHERE timestamp >= :cutoffTimestamp 
+        ORDER BY timestamp DESC 
+        LIMIT :count
+    """)
+    suspend fun getLastNSamplesOfLastSession(count: Int, cutoffTimestamp: Long): List<SampleEeg>
 
     // query for delete samples before a threshold timestamp
     @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
