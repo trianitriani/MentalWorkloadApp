@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -40,7 +40,9 @@
 
         <!-- Service for the sampling the data -->
         <service
-            android:name=".service.FineTuningService" />
+            android:name=".service.FineTuningService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!--
         <receiver
             android:name=".service.FineTuningReceiver"
