@@ -69,6 +69,7 @@ class FineTuningService : Service() {
         val repository = EegRepository(sampleEegDao)
 
         try {
+            /*
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
 
@@ -128,7 +129,7 @@ class FineTuningService : Service() {
                 stopSelf()
                 return
             }*/
-
+            */
             notificationHelper.notify(notificationHelper.createFineTuningSuccessNotification())
 
         } catch (e: Exception) {
