@@ -23,15 +23,18 @@ import android.app.NotificationManager
 class FineTuningService : Service() {
     companion object {
         var isRunning = false
+        private const val TAG = "FineTuningService"
     }
 
     private lateinit var notificationHelper: FineTuningNotification
+    private lateinit var notificationManager: NotificationManager
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
     override fun onCreate() {
         super.onCreate()
-        notificationHelper = FineTuningNotification(this)
+        notificationHelper = FineTuningNotification(this@FineTuningService)
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationHelper.createNotificationChannel()
     }
 
@@ -39,7 +42,10 @@ class FineTuningService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         isRunning = true
-        startForeground(FineTuningNotification.NOTIFICATION_ID, notificationHelper.createFineTuningStartedNotification())
+        val notification = notificationHelper.createFineTuningStartedNotification()
+        startForeground(FineTuningNotification.NOTIFICATION_ID, notification)
+
+        //startForeground(FineTuningNotification.NOTIFICATION_ID, notificationHelper.createFineTuningStartedNotification())
         //when service is started
         serviceScope.launch {
             try {
@@ -47,7 +53,9 @@ class FineTuningService : Service() {
                 fineTuning()
             } catch (e: Exception) {
                 //in case of exceptions
-                notificationHelper.notify(notificationHelper.createGenericErrorNotification())
+                withContext(Dispatchers.Main) {
+                    notificationHelper.showNotification(notificationHelper.createGenericErrorNotification(), FineTuningNotification.NOTIFICATION_ID+2)
+                }
                 stopSelf()
             } finally {
                 //stop the service
@@ -60,7 +68,12 @@ class FineTuningService : Service() {
     override fun onDestroy() {
         isRunning = false
         serviceJob.cancel() // cancel all coroutines when service is destroyed
-        stopForeground(STOP_FOREGROUND_DETACH)
+        try {
+            stopForeground(STOP_FOREGROUND_DETACH)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping foreground", e)
+        }
+
         super.onDestroy()
     }
 
@@ -69,7 +82,6 @@ class FineTuningService : Service() {
         val repository = EegRepository(sampleEegDao)
 
         try {
-            /*
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
 
@@ -78,9 +90,9 @@ class FineTuningService : Service() {
             val sessionsAvailable:Int= (samplesAvailable/18000L).toInt()
             // Checking if there is enough data
             if (sessionsAvailable < 20) {
-                notificationHelper.notify(
-                    notificationHelper.createNotEnoughDataErrorNotification(20 - sessionsAvailable)
-                )
+                withContext(Dispatchers.Main) {
+                    notificationHelper.showNotification(notificationHelper.createNotEnoughDataErrorNotification(20-sessionsAvailable), FineTuningNotification.NOTIFICATION_ID+2)
+                }
                 stopSelf() // Stop the service if not enough data
                 return
             }
@@ -95,7 +107,9 @@ class FineTuningService : Service() {
                 //extract features from the session samples
                 val featuresMatrix = repository.getFeaturesMatrixSessionSamples(rawSamples)
                 if (featuresMatrix.isEmpty()) {
-                    notificationHelper.notify(notificationHelper.createGenericErrorNotification())
+                    withContext(Dispatchers.Main) {
+                        notificationHelper.showNotification(notificationHelper.createGenericErrorNotification(), FineTuningNotification.NOTIFICATION_ID+2)
+                    }
                     stopSelf()
                     return
                 }
@@ -129,11 +143,12 @@ class FineTuningService : Service() {
                 stopSelf()
                 return
             }*/
-            */
-            notificationHelper.notify(notificationHelper.createFineTuningSuccessNotification())
+            withContext(Dispatchers.Main) {
+                notificationHelper.showNotification(notificationHelper.createFineTuningSuccessNotification(), FineTuningNotification.NOTIFICATION_ID+1)
+            }
 
         } catch (e: Exception) {
-            notificationHelper.notify(notificationHelper.createGenericErrorNotification())
+            notificationHelper.showNotification(notificationHelper.createGenericErrorNotification(), FineTuningNotification.NOTIFICATION_ID+2)
             stopSelf()
             return
         }
