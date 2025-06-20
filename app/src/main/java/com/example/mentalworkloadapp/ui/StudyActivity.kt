@@ -1,7 +1,11 @@
 package com.example.mentalworkloadapp.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -11,11 +15,12 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.example.mentalworkloadapp.R
 import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
-import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
 import com.example.mentalworkloadapp.service.EegSamplingService
 import com.example.mentalworkloadapp.service.FineTuningService
 import com.example.mentalworkloadapp.util.LanguageUtil
@@ -65,8 +70,7 @@ class StudyActivity : BaseActivity() {
 
         // click for lunching the training in background
         findViewById<ImageButton>(R.id.btn_weight).setOnClickListener {
-            // if any service is running, is possible to run the fineTuningService
-            if (!FineTuningService.isRunning && !EegSamplingService.isRunning) {
+            if (!FineTuningService.isRunning) {
                 val intent = Intent(this, FineTuningService::class.java)
                 ContextCompat.startForegroundService(this, intent)
                 Log.d("Session Study", "Il service per training dovrebbe runnare")
@@ -169,6 +173,14 @@ class StudyActivity : BaseActivity() {
             sharedPref.edit() { putBoolean("voting", isChecked) }
         }
 
+        /*
+        // change to graph activity if the user click on the button in the footer
+        val navGraph = findViewById<ImageView>(R.id.nav_graph)
+        navGraph.setOnClickListener {
+            val intent = Intent(this, GraphActivity::class.java)
+            startActivity(intent)
+            finish()
+        }*/
     }
 
     private fun goToRest(){
@@ -203,24 +215,10 @@ class StudyActivity : BaseActivity() {
         if(phase != "vote") return
         // now we have to vote that emoji
         val eegDao = DatabaseProvider.getSampleEegDao(context = this)
+        val since = System.currentTimeMillis() - 3 * 60 * 1000
         CoroutineScope(Dispatchers.IO).launch {
-            // assign a vote to the last samples (180 * 100 samples from now, last 3 minutes)
-            val samples = eegDao.getLastNSamples(180 * 100);
-            val updatedSamples = samples.map { sample ->
-                SampleEeg (
-                    timestamp = sample.timestamp,
-                    ch_c1 = sample.ch_c1,
-                    ch_c2 = sample.ch_c2,
-                    ch_c3 = sample.ch_c3,
-                    ch_c4 = sample.ch_c4,
-                    ch_c5 = sample.ch_c5,
-                    ch_c6 = sample.ch_c6,
-                    ch_r_ear = sample.ch_r_ear,
-                    ch_l_ear = sample.ch_l_ear,
-                    tiredness = vote
-                )
-            }
-            eegDao.updateSamplesEeg(updatedSamples)
+            // assign a vote to the last samples (3 minutes from now)
+            eegDao.updateTirednessSince(newTiredness = vote, since = since)
             // remove all the samples without vote
             eegDao.deleteSamplesWithoutTiredness()
         }
