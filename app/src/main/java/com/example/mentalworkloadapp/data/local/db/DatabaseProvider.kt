@@ -15,10 +15,7 @@ object DatabaseProvider {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "selene-db"
-            )
-            .createFromAsset("selene-db")
-            .fallbackToDestructiveMigration()
-            .build()
+            ).build().also { INSTANCE = it }
         }
     }
 
