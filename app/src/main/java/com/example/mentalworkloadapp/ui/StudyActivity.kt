@@ -1,9 +1,5 @@
 package com.example.mentalworkloadapp.ui
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.result.contract.ActivityResultContracts
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -43,32 +39,9 @@ class StudyActivity : BaseActivity() {
     private lateinit var checkboxNotification: CheckBox
     private lateinit var checkboxFeedback: CheckBox
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                Log.d("Permission", "Notification permission granted.")
-            } else {
-                Log.w("Permission", "Notification permission denied.")
-                Toast.makeText(this, "Notification permission is needed for alerts.", Toast.LENGTH_LONG).show()
-            }
-        }
-
-    private fun askNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.study)
-
-        askNotificationPermission()
 
         buttonStart = findViewById<Button>(R.id.btn_start)
         buttonEnd = findViewById<Button>(R.id.btn_end)

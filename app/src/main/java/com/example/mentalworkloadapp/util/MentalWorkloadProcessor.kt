@@ -63,9 +63,9 @@ class MentalWorkloadProcessor(
             //load base model
             interpreter = Interpreter(loadModelFile("model.tflite"))
             //check if checkpoint file exists
-            if(checkPointFileExists(context)){
+            if(checkPointFileExists()){
                 //load personalized model
-                restoreModelFromCheckpointFile(context, interpreter)
+                restoreModelFromCheckpointFile(context,interpreter)
 
             }
         }

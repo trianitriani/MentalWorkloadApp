@@ -69,6 +69,7 @@ class FineTuningService : Service() {
         val repository = EegRepository(sampleEegDao)
 
         try {
+            /*
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
 
@@ -76,18 +77,13 @@ class FineTuningService : Service() {
             val samplesAvailable=sampleEegDao.countSamples()
             val sessionsAvailable:Int= (samplesAvailable/18000L).toInt()
             // Checking if there is enough data
-
-            Log.d("FineTuningService", "Found $sessionsAvailable sessions available. Required: 5.")
-
-            if (sessionsAvailable < 5) {
+            if (sessionsAvailable < 20) {
                 notificationHelper.notify(
-                    notificationHelper.createNotEnoughDataErrorNotification(5 - sessionsAvailable)
+                    notificationHelper.createNotEnoughDataErrorNotification(20 - sessionsAvailable)
                 )
                 stopSelf() // Stop the service if not enough data
                 return
             }
-
-            Log.d("FineTuningService", "Starting fine-tuning loop for $sessionsAvailable sessions.")
 
             //for each session
             for (i in 0 until sessionsAvailable){
@@ -95,7 +91,7 @@ class FineTuningService : Service() {
                 val rawSamples= sampleEegDao.getSessionSamplesOrderedByTimestamp(limit = 18000, offset = i*18000)
                 //get label for the current session, get the label of the last sample
                 // in the session
-                val yTrain = floatArrayOf(rawSamples[0].tiredness.toFloat())
+                val yTrain = rawSamples[0].tiredness.toFloat()
                 //extract features from the session samples
                 val featuresMatrix = repository.getFeaturesMatrixSessionSamples(rawSamples)
                 if (featuresMatrix.isEmpty()) {
@@ -107,8 +103,8 @@ class FineTuningService : Service() {
                 val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
                 //create data structure to pass to model
                 val trainInputs = mapOf(
-                    "x" to arrayOf(xTrain),
-                    "y" to arrayOf(yTrain)
+                    "x" to xTrain,
+                    "y" to yTrain
                 )
                 val trainOutputs = mutableMapOf<String, Any>(
                     "loss" to FloatArray(1)
@@ -133,7 +129,7 @@ class FineTuningService : Service() {
                 stopSelf()
                 return
             }*/
-
+            */
             notificationHelper.notify(notificationHelper.createFineTuningSuccessNotification())
 
         } catch (e: Exception) {
