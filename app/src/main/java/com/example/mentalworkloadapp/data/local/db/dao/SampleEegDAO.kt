@@ -7,20 +7,21 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
-import kotlin.reflect.KClass
 
 @Dao
 interface SampleEegDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSampleEeg(vararg samplesEgg: SampleEeg)
+
     @Insert
     suspend fun insertSamplesEeg(samplesEeg: List<SampleEeg>)
 
     @Update
-    suspend fun updateSamplesEeg(vararg samplesEeg: SampleEeg)
+    suspend fun updateSamplesEeg(samplesEeg: List<SampleEeg>)
 
     @Delete
     suspend fun deleteSamplesEeg(vararg samplesEeg: SampleEeg)
+
     @Delete
     suspend fun deleteSamplesEeg(sampleEeg: List<SampleEeg>)
 
@@ -35,6 +36,9 @@ interface SampleEegDAO {
     // query to getting last 50 samples ordered by timestamp
     @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :limit OFFSET :offset")
     suspend fun getSessionSamplesOrderedByTimestamp(limit:Int , offset: Int): List<SampleEeg>
+
+    @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :count")
+    suspend fun getLastNSamples(count: Int): List<SampleEeg>
 
     // query for delete samples before a threshold timestamp
     @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
