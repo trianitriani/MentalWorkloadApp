@@ -18,6 +18,8 @@ import java.nio.channels.FileChannel
 import android.widget.Toast
 import com.example.mentalworkloadapp.notification.FineTuningNotification
 import android.app.NotificationManager
+import com.example.mentalworkloadapp.util.checkPointFileExists
+import com.example.mentalworkloadapp.util.restoreModelFromCheckpointFile
 
 
 class FineTuningService : Service() {
@@ -82,8 +84,14 @@ class FineTuningService : Service() {
         val repository = EegRepository(sampleEegDao)
 
         try {
+
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
+            //check if checkpoint file exists
+            if(checkPointFileExists()){
+                //load personalized model
+                restoreModelFromCheckpointFile(this,interpreter)
+            }
 
             //getting the number of session available
             val samplesAvailable=sampleEegDao.countSamples()

@@ -66,6 +66,41 @@ object EegFeatureExtractor {
         return -normPsd.sumOf { if (it > 0) it * ln(it) else 0.0 }
     }
 
+    private fun fastNotch50Hz(signal: DoubleArray, samplingRate: Int): DoubleArray {
+        val f0 = 50.0  // Notch frequency
+        val Q = 30.0   // Quality factor (higher = narrower notch)
+
+        val w0 = 2 * Math.PI * f0 / samplingRate
+        val alpha = sin(w0) / (2 * Q)
+
+        val b0 = 1.0
+        val b1 = -2 * cos(w0)
+        val b2 = 1.0
+        val a0 = 1 + alpha
+        val a1 = -2 * cos(w0)
+        val a2 = 1 - alpha
+
+        // Normalize coefficients
+        val normB0 = b0 / a0
+        val normB1 = b1 / a0
+        val normB2 = b2 / a0
+        val normA1 = a1 / a0
+        val normA2 = a2 / a0
+
+        val output = DoubleArray(signal.size)
+        var x1 = 0.0; var x2 = 0.0
+        var y1 = 0.0; var y2 = 0.0
+
+        for (i in signal.indices) {
+            val x0 = signal[i]
+            val y0 = normB0 * x0 + normB1 * x1 + normB2 * x2 - normA1 * y1 - normA2 * y2
+            output[i] = y0
+            x2 = x1; x1 = x0
+            y2 = y1; y1 = y0
+        }
+        return output
+    }
+
     // Extract a feature matrix from EEG channels
     fun extractFeaturesMatrix(channels: Array<DoubleArray>, samplingRate: Int): Array<FloatArray> {
         // Create an array of FloatArrays, one per channel (6 channels)
