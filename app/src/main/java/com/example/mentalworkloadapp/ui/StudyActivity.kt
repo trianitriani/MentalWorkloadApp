@@ -149,16 +149,16 @@ class StudyActivity : BaseActivity() {
         // when the user click one emoji, he wants to vote his mental workload at the end
         // of the session of study
         emojiFresh.setOnClickListener {
-            vote(sharedPref, 1)
+            vote(sharedPref, 0)
         }
         emojiNeutral.setOnClickListener {
-            vote(sharedPref, 2)
+            vote(sharedPref, 1)
         }
         emojiTired.setOnClickListener {
-            vote(sharedPref, 3)
+            vote(sharedPref, 2)
         }
         emojiSleep.setOnClickListener {
-            vote(sharedPref, 4)
+            vote(sharedPref, 3)
         }
 
         checkboxNotification.setOnCheckedChangeListener { _, isChecked ->
