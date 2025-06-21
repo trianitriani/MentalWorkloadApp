@@ -6,7 +6,7 @@ import java.io.File
 
 
     fun checkPointFileExists(): Boolean {
-        val filePath = "/data/data/your.package.name/files/checkpoint.ckpt"
+        val filePath = "/data/data/com.example.mentalworkloadapp/files/checkpoint.ckpt"
         val file = File(filePath)
         return file.exists()
     }
