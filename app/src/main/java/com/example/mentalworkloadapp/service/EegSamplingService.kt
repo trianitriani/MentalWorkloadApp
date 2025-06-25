@@ -34,7 +34,6 @@ class EegSamplingService : Service() {
     private lateinit var networkCheckHandler: Handler
     private lateinit var networkCheckRunnable: Runnable
     private var isServerManagerActive = false
-    var measurementsCounter: Int = 0
     private var mentalWorkloadProcessor: MentalWorkloadProcessor? = null
     private var inferenceStarted = false
 
@@ -106,12 +105,10 @@ class EegSamplingService : Service() {
     }
 
     private fun saveToDatabase(eegData: SampleEeg) {
-        measurementsCounter++
-        if(measurementsCounter % 5 == 0){ //<-- subsampling
-            val eegDao = DatabaseProvider.getSampleEegDao(context = this)
-            CoroutineScope(Dispatchers.IO).launch {
-                eegDao.insertSampleEeg(eegData)
-            }
+
+        val eegDao = DatabaseProvider.getSampleEegDao(context = this)
+        CoroutineScope(Dispatchers.IO).launch {
+               eegDao.insertSampleEeg(eegData)
         }
     }
 
