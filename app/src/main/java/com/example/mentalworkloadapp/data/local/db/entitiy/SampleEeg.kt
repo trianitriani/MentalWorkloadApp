@@ -73,7 +73,7 @@ class SampleEeg(
                 ch_c6 = sensorData.channel6 * 0.045,
                 ch_r_ear = sensorData.channel7 * 0.045,
                 ch_l_ear = sensorData.channel8 * 0.045,
-                tiredness = 0,
+                tiredness = -1,
                 accelerationX = sensorData.accelerationX * 0.061035 * 0.001,
                 accelerationY = sensorData.accelerationY * 0.061035 * 0.001,
                 accelerationZ = sensorData.accelerationZ * 0.061035 * 0.001,
