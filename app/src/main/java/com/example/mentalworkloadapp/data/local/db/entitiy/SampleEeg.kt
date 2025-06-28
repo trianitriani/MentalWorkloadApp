@@ -17,7 +17,8 @@ class SampleEeg(
     @ColumnInfo(name = "channel_c6") val ch_c6: Double,
     @ColumnInfo(name = "channel_right_ear") val ch_r_ear: Double,
     @ColumnInfo(name = "channel_left_ear") val ch_l_ear: Double,
-    @ColumnInfo(name = "tiredness") val tiredness: Int
+    @ColumnInfo(name = "tiredness") val tiredness: Int,
+    @ColumnInfo(name = "session_id") val session_id: Int
 ) {
     // fields not saved in the database
     @Ignore var accelerationX: Double = 0.0
@@ -42,6 +43,7 @@ class SampleEeg(
         ch_r_ear: Double,
         ch_l_ear: Double,
         tiredness: Int,
+        session_id: Int,
         accelerationX: Double,
         accelerationY: Double,
         accelerationZ: Double,
@@ -50,7 +52,7 @@ class SampleEeg(
         angularRateZ: Double,
         voltage: UInt,
         numberOfMeasurement: UInt
-    ) : this(timestamp, ch_c1, ch_c2, ch_c3, ch_c4, ch_c5, ch_c6, ch_r_ear, ch_l_ear, tiredness) {
+    ) : this(timestamp, ch_c1, ch_c2, ch_c3, ch_c4, ch_c5, ch_c6, ch_r_ear, ch_l_ear, tiredness, session_id) {
         this.accelerationX = accelerationX
         this.accelerationY = accelerationY
         this.accelerationZ = accelerationZ
@@ -62,7 +64,7 @@ class SampleEeg(
     }
 
     companion object {
-        fun fromSensorData(sensorData: SensorData): SampleEeg {
+        fun fromSensorData(sensorData: SensorData, sessionId: Int): SampleEeg {
             return SampleEeg(
                 timestamp = System.currentTimeMillis(),
                 ch_c1 = sensorData.channel1 * 0.045,
@@ -74,6 +76,7 @@ class SampleEeg(
                 ch_r_ear = sensorData.channel7 * 0.045,
                 ch_l_ear = sensorData.channel8 * 0.045,
                 tiredness = -1,
+                session_id = sessionId,
                 accelerationX = sensorData.accelerationX * 0.061035 * 0.001,
                 accelerationY = sensorData.accelerationY * 0.061035 * 0.001,
                 accelerationZ = sensorData.accelerationZ * 0.061035 * 0.001,

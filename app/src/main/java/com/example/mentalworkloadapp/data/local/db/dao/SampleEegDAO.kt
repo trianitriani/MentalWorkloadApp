@@ -48,6 +48,12 @@ interface SampleEegDAO {
     """)
     suspend fun getLastNSamplesOfLastSession(count: Int): List<SampleEeg>
 
+    @Query("""
+        SELECT MAX(session_id)
+        FROM SampleEeg
+    """)
+    suspend fun getLastSessionId() : Int?
+
     // query for delete samples before a threshold timestamp
     @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
     suspend fun deleteSamplesFrom(thresholdTimestamp: Long)

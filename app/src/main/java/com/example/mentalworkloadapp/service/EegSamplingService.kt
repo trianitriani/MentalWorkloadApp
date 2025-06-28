@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.core.content.edit
 import androidx.room.Room
 import com.example.mentalworkloadapp.data.local.db.AppDatabase
 import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
@@ -29,7 +30,6 @@ class EegSamplingService : Service() {
     companion object {
         var isRunning = false
         var lastSampling: Long = 0
-
     }
     private lateinit var networkCheckHandler: Handler
     private lateinit var networkCheckRunnable: Runnable
@@ -39,7 +39,8 @@ class EegSamplingService : Service() {
     private var inferenceStarted = false
 
     private var serverManager = ServerManager { sensorData: SensorData ->
-        val sampleEeg = SampleEeg.fromSensorData(sensorData)
+        // gets current session id
+        val sampleEeg = SampleEeg.fromSensorData(sensorData, getCurrentSessionId())
         saveToDatabase(sampleEeg)
     }
 
@@ -84,7 +85,7 @@ class EegSamplingService : Service() {
                 Log.e("EegNetworkService", "Errore avviando ServerManager: ${e.message}")
                 // i have to re define the object because is broken
                 serverManager = ServerManager { sensorData: SensorData ->
-                    val sampleEeg = SampleEeg.fromSensorData(sensorData)
+                    val sampleEeg = SampleEeg.fromSensorData(sensorData, getCurrentSessionId())
                     saveToDatabase(sampleEeg)
                 }
                 EegSamplingNotification(this).showWifiErrorNotification()
@@ -107,12 +108,30 @@ class EegSamplingService : Service() {
 
     private fun saveToDatabase(eegData: SampleEeg) {
         measurementsCounter++
-        if(measurementsCounter % 5 == 0){ //<-- subsampling
+        if(measurementsCounter % 5 == 0){ // <-- subsampling
             val eegDao = DatabaseProvider.getSampleEegDao(context = this)
             CoroutineScope(Dispatchers.IO).launch {
                 eegDao.insertSampleEeg(eegData)
             }
         }
+    }
+
+    private fun getCurrentSessionId() : Int {
+        val sharedPref = getSharedPreferences("SelenePreferences", MODE_PRIVATE)
+        var id = sharedPref.getInt("session_id", -1);
+        if(id == -1){
+            // variable id does not exists
+            val eegDao = DatabaseProvider.getSampleEegDao(context = this)
+            CoroutineScope(Dispatchers.IO).launch {
+                id = eegDao.getLastSessionId() ?: 1
+            }
+            // update the shared preferences
+            sharedPref.edit() {
+                putInt("session_id", id + 1)
+            }
+            return id + 1
+        }
+        return id
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

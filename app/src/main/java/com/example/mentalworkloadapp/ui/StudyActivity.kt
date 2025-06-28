@@ -110,9 +110,21 @@ class StudyActivity : BaseActivity() {
             Log.d("Session Study", "I'm starting now to study")
             // now we have to starting the service
             if (!EegSamplingService.isRunning) {
+                // now we update the session id
+                var id = sharedPref.getInt("session_id", -1);
+                if(id == -1){
+                    val eegDao = DatabaseProvider.getSampleEegDao(context = this)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        id = eegDao.getLastSessionId() ?: 1
+                    }
+                }
+                // update the shared preferences with the new session id
+                sharedPref.edit() {
+                    putInt("session_id", id + 1)
+                }
+
                 val intent = Intent(this, EegSamplingService::class.java)
                 ContextCompat.startForegroundService(this, intent)
-                Log.d("Session Study", "Il service dovrebbe runnare")
             } else {
                 Log.d("Session Study", "Il service non sta runnando")
             }
@@ -204,8 +216,8 @@ class StudyActivity : BaseActivity() {
         // now we have to vote that emoji
         val eegDao = DatabaseProvider.getSampleEegDao(context = this)
         CoroutineScope(Dispatchers.IO).launch {
-            // assign a vote to the last samples (last 180 * 100 samples)
-            val samples = eegDao.getLastNSamplesOfLastSession(180 * 100);
+            // assign a vote to the last samples (last 32 * 100 samples)
+            val samples = eegDao.getLastNSamplesOfLastSession(32 * 100);
             val updatedSamples = samples.map { sample ->
                 SampleEeg (
                     timestamp = sample.timestamp,
@@ -217,7 +229,8 @@ class StudyActivity : BaseActivity() {
                     ch_c6 = sample.ch_c6,
                     ch_r_ear = sample.ch_r_ear,
                     ch_l_ear = sample.ch_l_ear,
-                    tiredness = vote
+                    tiredness = vote,
+                    session_id = sample.session_id
                 )
             }
             eegDao.updateSamplesEeg(updatedSamples)
