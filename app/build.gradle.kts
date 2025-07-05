@@ -74,5 +74,8 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite:2.14.0") // Use latest
     implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
     implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
+    
+    // Preprocessing
+    implementation(files("libs/JWave.jar"))
 
 }
