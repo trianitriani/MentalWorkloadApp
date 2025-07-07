@@ -2,6 +2,7 @@ package com.example.mentalworkloadapp.util
 
 import kotlin.math.*
 import org.jtransforms.fft.DoubleFFT_1D
+import com.example.mentalworkloadapp.util.EegPreprocessing
 
 // Object for extracting EEG features
 object EegFeatureExtractor {
@@ -68,10 +69,14 @@ object EegFeatureExtractor {
 
     // Extract a feature matrix from EEG channels
     fun extractFeaturesMatrix(channels: Array<DoubleArray>, samplingRate: Int): Array<FloatArray> {
+
+        // Preprocessing of the voltages
+        val preprocessedChannels = EegPreprocessing.preprocess(channels)
+
         // Create an array of FloatArrays, one per channel (6 channels)
         return Array(6) { chIdx ->
-            // Select current channel signal
-            val signal = channels[chIdx]
+            // Select current channel signal (preprocessed)
+            val signal = preprocessedChannels[chIdx]
             // Compute frequencies and PSD for the signal
             val (freqs, psd) = computePSD(signal, samplingRate)
 
