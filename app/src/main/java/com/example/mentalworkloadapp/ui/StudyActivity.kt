@@ -218,21 +218,12 @@ class StudyActivity : BaseActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             // assign a vote to the last samples (last 32 * 100 samples)
             val samples = eegDao.getLastNSamplesOfLastSession(32 * 100);
+
+            // --- FIX: Use .copy() to create updated instances while preserving the ID ---
             val updatedSamples = samples.map { sample ->
-                SampleEeg (
-                    timestamp = sample.timestamp,
-                    ch_c1 = sample.ch_c1,
-                    ch_c2 = sample.ch_c2,
-                    ch_c3 = sample.ch_c3,
-                    ch_c4 = sample.ch_c4,
-                    ch_c5 = sample.ch_c5,
-                    ch_c6 = sample.ch_c6,
-                    ch_r_ear = sample.ch_r_ear,
-                    ch_l_ear = sample.ch_l_ear,
-                    tiredness = vote,
-                    session_id = sample.session_id
-                )
+                sample.copy(tiredness = vote)
             }
+
             eegDao.updateSamplesEeg(updatedSamples)
             // remove all the samples without vote
             eegDao.deleteSamplesWithoutTiredness()

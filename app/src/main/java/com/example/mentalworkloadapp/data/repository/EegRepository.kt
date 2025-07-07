@@ -1,39 +1,52 @@
 package com.example.mentalworkloadapp.data.repository
 
+import android.util.Log
 import com.example.mentalworkloadapp.data.local.db.dao.SampleEegDAO
 import com.example.mentalworkloadapp.data.local.db.entitiy.SampleEeg
 import com.example.mentalworkloadapp.util.EegFeatureExtractor
 
 class EegRepository(private val dao: SampleEegDAO) {
-    // Repository class that encapsulates data access via the DAO
 
-    // This function returns the feature matrix for the last n seconds
     suspend fun getFeaturesMatrixForLastNSeconds(nSeconds: Int): Array<FloatArray> {
+        // --- FIX 1: Define the RAW and TARGET sampling frequencies ---
+        val rawSamplingFreq = 500 // The rate we are now saving at
+        val targetSamplingFreq = 100 // The rate our model and feature extractor expect
+        val downsampleFactor = rawSamplingFreq / targetSamplingFreq // This will be 5
 
-        // Sampling frequency of the EEG data (100 Hz)
-        val samplingFreq = 100
+        // Calculate how many raw samples we need to fetch from the DB
+        val rawSamplesNeeded = nSeconds * rawSamplingFreq
 
-        // Calculates how many samples are needed to cover n seconds (e.g., 10s * 100Hz = 1000 samples)
-        val samplesNeeded = nSeconds * samplingFreq
+        // The number of samples after downsampling
+        val targetSamplesNeeded = nSeconds * targetSamplingFreq
 
-        // Retrieves all EEG samples from the database ordered by ascending timestamp
+        // Retrieve the latest raw samples
         val allSamples = dao.getAllSamplesOrderedByTimestamp()
 
-        // Throws an exception if there aren't enough samples to cover the requested period
-        if (allSamples.size < samplesNeeded) {
-            throw IllegalArgumentException("Not enough data samples in database")
+        if (allSamples.size < rawSamplesNeeded) {
+            // Not enough data yet, return empty or handle gracefully
+            Log.w("EegRepository", "Not enough data for feature extraction. Have ${allSamples.size}, need $rawSamplesNeeded.")
+            return emptyArray()
         }
 
-        // Takes only the last samplesNeeded samples, i.e., the last n seconds of data
-        val recentSamples = allSamples.takeLast(samplesNeeded)
+        val recentRawSamples = allSamples.takeLast(rawSamplesNeeded)
 
-        // Initializes a 2D array: 6 EEG channels, each with samplesNeeded double values
-        val chData = Array(6) { DoubleArray(samplesNeeded) }
+        // --- FIX 2: Downsample the data before feature extraction ---
+        // Create a new list by taking every N-th sample (where N is downsampleFactor)
+        val downsampledSamples = recentRawSamples.filterIndexed { index, _ -> index % downsampleFactor == 0 }
 
-        // Extracts the values of the 6 channels for each sample and stores them in chData matrix
-        for (i in 0 until samplesNeeded) {
-            val sample = recentSamples[i]
+        // Ensure we have the correct number of samples after downsampling
+        if (downsampledSamples.size < targetSamplesNeeded) {
+            Log.w("EegRepository", "Downsampled data size is smaller than expected. Have ${downsampledSamples.size}, need $targetSamplesNeeded.")
+            return emptyArray()
+        }
 
+        // Take the last `targetSamplesNeeded` just in case of rounding
+        val finalSamples = downsampledSamples.takeLast(targetSamplesNeeded)
+
+        val chData = Array(6) { DoubleArray(targetSamplesNeeded) }
+
+        for (i in 0 until targetSamplesNeeded) {
+            val sample = finalSamples[i]
             chData[0][i] = sample.ch_c1
             chData[1][i] = sample.ch_c2
             chData[2][i] = sample.ch_c3
@@ -42,19 +55,23 @@ class EegRepository(private val dao: SampleEegDAO) {
             chData[5][i] = sample.ch_c6
         }
 
-        // Passes the data matrix and sampling frequency to the EegFeatureExtractor
-        return EegFeatureExtractor.extractFeaturesMatrix(chData, samplingFreq)
+        // --- FIX 3: Use the TARGET frequency for the feature extractor ---
+        return EegFeatureExtractor.extractFeaturesMatrix(chData, targetSamplingFreq)
     }
 
+    // This function can be updated similarly if needed
     suspend fun getFeaturesMatrixSessionSamples(sessionSamples: List<SampleEeg>): Array<FloatArray> {
+        // For now, assuming this is also used with the 100Hz model
+        val targetSamplingFreq = 100
+        val rawSamplingFreq = 500 // Assuming sessionSamples are raw
+        val downsampleFactor = rawSamplingFreq / targetSamplingFreq
 
-        // Initializes a 2D array: 6 EEG channels, each with samplesNeeded double values
-        val chData = Array(6) { DoubleArray(sessionSamples.size) }
+        val downsampledSamples = sessionSamples.filterIndexed { index, _ -> index % downsampleFactor == 0 }
 
-        // Extracts the values of the 6 channels for each sample and stores them in chData matrix
-        for (i in 0 until sessionSamples.size) {
-            val sample = sessionSamples[i]
+        val chData = Array(6) { DoubleArray(downsampledSamples.size) }
 
+        for (i in downsampledSamples.indices) {
+            val sample = downsampledSamples[i]
             chData[0][i] = sample.ch_c1
             chData[1][i] = sample.ch_c2
             chData[2][i] = sample.ch_c3
@@ -63,7 +80,6 @@ class EegRepository(private val dao: SampleEegDAO) {
             chData[5][i] = sample.ch_c6
         }
 
-        // Passes the data matrix and sampling frequency to the EegFeatureExtractor
-        return EegFeatureExtractor.extractFeaturesMatrix(chData, 100)
+        return EegFeatureExtractor.extractFeaturesMatrix(chData, targetSamplingFreq)
     }
 }
