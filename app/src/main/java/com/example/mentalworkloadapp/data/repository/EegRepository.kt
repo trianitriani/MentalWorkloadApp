@@ -11,25 +11,20 @@ class EegRepository(private val dao: SampleEegDAO) {
         val rawSamplingFreq = 500 // The rate we are saving at
         val targetSamplingFreq = 100 // The rate our model and feature extractor expect
         val downsampleFactor = rawSamplingFreq / targetSamplingFreq // This will be 5
-
         // Define the REQUIRED number of samples for the preprocessing pipeline.
         // This MUST be a power of two for the JWave (wavelet) transform and >= 127 for the Savitzky-Golay filter.
         // 128 is the smallest number that satisfies both conditions.
         val requiredSamples = 128
-
         // Calculate how many raw samples we need to fetch from the DB to get the required number of downsampled samples.
         val rawSamplesNeeded = requiredSamples * downsampleFactor // 128 * 5 = 640
 
-        // Retrieve the latest raw samples
-        val allSamples = dao.getAllSamplesOrderedByTimestamp()
 
-        if (allSamples.size < rawSamplesNeeded) {
-            // Not enough data yet, return empty or handle gracefully
-            Log.w("EegRepository", "Not enough data for feature extraction. Have ${allSamples.size}, need $rawSamplesNeeded.")
+        val recentRawSamples = dao.getLastNRawSamples(rawSamplesNeeded).reversed()
+
+        if (recentRawSamples.size < rawSamplesNeeded) {
+            Log.w("EegRepository", "Not enough data for feature extraction. Have ${recentRawSamples.size}, need $rawSamplesNeeded.")
             return emptyArray()
         }
-
-        val recentRawSamples = allSamples.takeLast(rawSamplesNeeded)
 
         //  Downsample the data before feature extraction
         // Create a new list by taking every N-th sample (where N is downsampleFactor)

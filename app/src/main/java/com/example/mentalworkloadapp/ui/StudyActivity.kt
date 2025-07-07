@@ -22,6 +22,8 @@ import com.example.mentalworkloadapp.util.LanguageUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
+
 
 class StudyActivity : BaseActivity() {
     private lateinit var buttonStart: Button
@@ -216,17 +218,14 @@ class StudyActivity : BaseActivity() {
         // now we have to vote that emoji
         val eegDao = DatabaseProvider.getSampleEegDao(context = this)
         CoroutineScope(Dispatchers.IO).launch {
-            // assign a vote to the last samples 32 seconds of sampling
-            val samples = eegDao.getLastNSamplesOfLastSession(32 * 500);
-
-            // --- FIX: Use .copy() to create updated instances while preserving the ID ---
-            val updatedSamples = samples.map { sample ->
-                sample.copy(tiredness = vote)
+            DatabaseProvider.dbMutex.withLock {
+                val samples = eegDao.getLastNSamplesOfLastSession(32 * 500)
+                val updatedSamples = samples.map { sample ->
+                    sample.copy(tiredness = vote)
+                }
+                eegDao.updateSamplesEeg(updatedSamples)
+                eegDao.deleteSamplesWithoutTiredness()
             }
-
-            eegDao.updateSamplesEeg(updatedSamples)
-            // remove all the samples without vote
-            eegDao.deleteSamplesWithoutTiredness()
         }
         sharedPref.edit() {
             putString("phase", "rest")

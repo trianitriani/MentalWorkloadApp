@@ -72,4 +72,7 @@ interface SampleEegDAO {
     //query to delete all the data in the database
     @Query("DELETE FROM SampleEeg")
     suspend fun deleteAllData() : Int
+
+    @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :count")
+    suspend fun getLastNRawSamples(count: Int): List<SampleEeg>
 }

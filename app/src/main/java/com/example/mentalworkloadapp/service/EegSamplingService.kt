@@ -16,6 +16,8 @@ import com.example.mentalworkloadapp.util.MentalWorkloadProcessor
 import kotlinx.coroutines.*
 import mylibrary.mindrove.ServerManager
 import mylibrary.mindrove.SensorData
+import kotlinx.coroutines.sync.withLock
+
 
 class EegSamplingService : Service() {
     companion object {
@@ -33,10 +35,10 @@ class EegSamplingService : Service() {
     // Coroutine scope for this service
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // --- FIX 1: Hold a single instance of the DAO ---
+    //  Hold a single instance of the DAO ---
     private lateinit var eegDao: SampleEegDAO
 
-    // --- FIX 2: Buffer for batch inserts ---
+    // -Buffer for batch inserts ---
     private val eegSampleBuffer = mutableListOf<SampleEeg>()
 
     // Keep one instance of ServerManager
@@ -47,7 +49,7 @@ class EegSamplingService : Service() {
 
         val sampleEeg = SampleEeg.fromSensorData(sensorData, getCurrentSessionId())
 
-        // --- FIX 3: Add to buffer instead of immediate save ---
+        // Add to buffer instead of immediate save ---
         synchronized(eegSampleBuffer) {
             eegSampleBuffer.add(sampleEeg)
             // When buffer is full, trigger a batch save
@@ -91,7 +93,6 @@ class EegSamplingService : Service() {
         return START_STICKY
     }
 
-    // --- FIX 4: Simplified and more robust connection management ---
     private fun manageServerConnection() {
         val timeSinceLastSample = System.currentTimeMillis() - lastSampling
 
@@ -148,11 +149,13 @@ class EegSamplingService : Service() {
         }
     }
 
-    // --- FIX 5: Save a batch of samples ---
+    // Save a batch of samples
     private fun saveToDatabase(eegDataBatch: List<SampleEeg>) {
         serviceScope.launch {
-            eegDao.insertSamplesEeg(eegDataBatch)
-            Log.d("EegService", "Saved a batch of ${eegDataBatch.size} samples.")
+            DatabaseProvider.dbMutex.withLock {
+                eegDao.insertSamplesEeg(eegDataBatch)
+                Log.d("EegService", "Saved a batch of ${eegDataBatch.size} samples.")
+            }
         }
     }
 
@@ -179,8 +182,15 @@ class EegSamplingService : Service() {
             if (eegSampleBuffer.isNotEmpty()) {
                 val remainingSamples = ArrayList(eegSampleBuffer)
                 eegSampleBuffer.clear()
-                saveToDatabase(remainingSamples)
-                Log.i("EegService", "Saved ${remainingSamples.size} remaining samples on destroy.")
+                serviceScope.launch {
+                    DatabaseProvider.dbMutex.withLock {
+                        saveToDatabase(remainingSamples)
+                        Log.i(
+                            "EegService",
+                            "Saved ${remainingSamples.size} remaining samples on destroy."
+                        )
+                    }
+                }
             }
         }
 

@@ -6,14 +6,13 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import mylibrary.mindrove.SensorData
 
-// --- FIX 1: Make it a data class ---
 @Entity
 data class SampleEeg(
-    // --- FIX 2: Add an auto-generating primary key. Must be a var with a default value. ---
+    // Add an auto-generating primary key. Must be a var with a default value.
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0,
 
-    // --- FIX 3: Make timestamp a regular, indexed column for fast queries ---
+    // Make timestamp a regular, indexed column for fast queries
     @ColumnInfo(index = true)
     val timestamp: Long,
 
