@@ -216,8 +216,8 @@ class StudyActivity : BaseActivity() {
         // now we have to vote that emoji
         val eegDao = DatabaseProvider.getSampleEegDao(context = this)
         CoroutineScope(Dispatchers.IO).launch {
-            // assign a vote to the last samples (last 32 * 100 samples)
-            val samples = eegDao.getLastNSamplesOfLastSession(32 * 100);
+            // assign a vote to the last samples 32 seconds of sampling
+            val samples = eegDao.getLastNSamplesOfLastSession(32 * 500);
 
             // --- FIX: Use .copy() to create updated instances while preserving the ID ---
             val updatedSamples = samples.map { sample ->

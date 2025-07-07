@@ -58,7 +58,7 @@ interface SampleEegDAO {
     @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
     suspend fun deleteSamplesFrom(thresholdTimestamp: Long)
 
-    @Query("DELETE FROM SampleEeg WHERE tiredness = 0")
+    @Query("DELETE FROM SampleEeg WHERE tiredness = -1")
     suspend fun deleteSamplesWithoutTiredness()
 
     // query for setting the tiredness when a user vote
