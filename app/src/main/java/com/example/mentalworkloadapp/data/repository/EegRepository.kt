@@ -64,6 +64,6 @@ class EegRepository(private val dao: SampleEegDAO) {
         }
 
         // Passes the data matrix and sampling frequency to the EegFeatureExtractor
-        return EegFeatureExtractor.extractFeaturesMatrix(chData, 100)
+        return EegFeatureExtractor.EXPERIMENTALextractFeaturesMatrix(chData, 100)
     }
 }
