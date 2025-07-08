@@ -105,34 +105,44 @@ class FineTuningService : Service() {
                 return
             }
 
-            //for each session
-            for (i in 0 until sessionsAvailable){
-                //get the samples from database
-                val rawSamples= sampleEegDao.getSessionSamplesOrderedByTimestamp(limit = 18000, offset = i*18000)
-                //get label for the current session, get the label of the last sample
-                // in the session
-                val yTrain = rawSamples[0].tiredness.toFloat()
-                //extract features from the session samples
-                val featuresMatrix = repository.getFeaturesMatrixSessionSamples(rawSamples)
-                if (featuresMatrix.isEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        notificationHelper.showNotification(notificationHelper.createGenericErrorNotification(), FineTuningNotification.NOTIFICATION_ID+2)
+            //for 5 epochs
+            for (j in 0  until 5) {
+                //for each session
+                val sessionOrder = (0 until sessionsAvailable).shuffled()
+                for (i in sessionOrder) {
+                    //get the samples from database, considering last 32 seconds
+                    val rawSamples = sampleEegDao.getSessionSamplesOrderedByTimestamp(
+                        limit = 3200,
+                        offset = i * 18000
+                    )
+                    //get label for the current session, get the label of the last sample
+                    // in the session
+                    val yTrain = rawSamples[0].tiredness.toFloat()
+                    //extract features from the session samples
+                    val featuresMatrix = repository.getFeaturesMatrixSessionSamples(rawSamples)
+                    if (featuresMatrix.isEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            notificationHelper.showNotification(
+                                notificationHelper.createGenericErrorNotification(),
+                                FineTuningNotification.NOTIFICATION_ID + 2
+                            )
+                        }
+                        stopSelf()
+                        return
                     }
-                    stopSelf()
-                    return
+                    //flatten the feature matrix
+                    val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
+                    //create data structure to pass to model
+                    val trainInputs = mapOf(
+                        "x" to xTrain,
+                        "y" to yTrain
+                    )
+                    val trainOutputs = mutableMapOf<String, Any>(
+                        "loss" to FloatArray(1)
+                    )
+                    //run a training stage
+                    interpreter.runSignature(trainInputs, trainOutputs, "train")
                 }
-                //flatten the feature matrix
-                val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
-                //create data structure to pass to model
-                val trainInputs = mapOf(
-                    "x" to xTrain,
-                    "y" to yTrain
-                )
-                val trainOutputs = mutableMapOf<String, Any>(
-                    "loss" to FloatArray(1)
-                )
-                //run a training stage
-                interpreter.runSignature(trainInputs, trainOutputs, "train")
             }
 
 
