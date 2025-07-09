@@ -138,7 +138,7 @@ class EegSamplingService : Service() {
             if (!inferenceStarted && isServerManagerActive) {
                 // Start inference processor if not already running
                 serviceScope.launch {
-                    delay(2000) // Wait a bit for data to stabilize
+                    delay(35000) // Wait a bit for data to stabilize
                     if (isServerManagerActive) { // Double check
                         mentalWorkloadProcessor?.start()
                         inferenceStarted = true

@@ -29,31 +29,25 @@ class MentalWorkloadProcessor(
     // Context to access resources and database
     private val context: Context,  
     // Time interval (in seconds) between predictions
-    private val intervalSeconds: Long = 1L 
+    private val intervalSeconds: Long = 32L
 ) {
-    // Temporary list to accumulate the last 5 predictions
-    private val predictions = mutableListOf<Int>() 
+    // Temporary list to accumulate the last predictions
+    private val predictionBuffer = mutableListOf<Int>()
     // TensorFlow Lite interpreter to run the model
     private lateinit var interpreter: Interpreter 
     // DAO of row data
     private val sampleEegDao = DatabaseProvider.getDatabase(context).sampleEegDao()
-    // DAO to save predictions in DB
-    private val dao = DatabaseProvider.getDatabase(context).predictedLevelDao()
-
     private val repository = EegRepository(sampleEegDao)
-
     private val notificationHelper = EegSamplingNotification(context)
-
     // Coroutine job managing the inference loop
     private var job: Job? = null  
 
     // Variables for notification
     private val threshold = 2
-    val ringBuffer = IntArray(60)
-    var bufferIndex = 0
-    var insertionCounter = 0
     var lastNotificationSent: String? = null
-    var skipNextNotification = false
+    private var firstNotificationSent = false
+
+
 
     // Function to start the periodic inference loop
     fun start() {
@@ -77,7 +71,7 @@ class MentalWorkloadProcessor(
             // Infinite loop as long as coroutine is active
             while (isActive) {
                 // Get the feature vector extracted from the EEG signal
-                val featuresMatrix = repository.getFeaturesMatrixForLastNSeconds(1)  // last 1 seconds
+                val featuresMatrix = repository.getFeaturesMatrixForLastNSeconds(32)  // last 32 seconds
                 if (featuresMatrix.isEmpty()) {
                     Log.d("MentalWorkloadProcessor", "Features matrix empty, i'm wait one second for the next loop.")
                     delay(intervalSeconds * 1000)
@@ -104,29 +98,31 @@ class MentalWorkloadProcessor(
                 // Find the index of the class with the highest probability
                 val predictedClass = output[0].indices.maxByOrNull { output[0][it] } ?: 0
 
-                // Add the current prediction to the list
-                predictions.add(predictedClass)
+                // The predition is saved in the temporary buffer
+                predictionBuffer.add(predictedClass)
 
-                // When 5 predictions are collected, find the most frequent and save to DB
-                if (predictions.size == 5) {
-                    val mostFrequent = predictions.groupingBy { it }
-                        // Count how many times each class appears
-                        .eachCount() 
-                        // Find the class with max frequency
-                        .maxByOrNull { it.value } 
-                        ?.key ?: predictedClass
+                // The first notification is checked after every 5 predictions
+                if (!firstNotificationSent && predictionBuffer.size == 5) {
+                    val mostFrequent = predictionBuffer.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: predictedClass
+                    if (mostFrequent >= threshold) {
+                        sendNotification("fatigue")
+                        firstNotificationSent = true
+                    }
+                    predictionBuffer.clear()
+                }
+                // The other notifications are checked every 17 predictions
+                else if (firstNotificationSent && predictionBuffer.size == 17) {
+                    val mostFrequent = predictionBuffer.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: predictedClass
+                    val type = if (mostFrequent >= threshold) "fatigue" else "relaxed"
 
-                    // Current timestamp in milliseconds
-                    val timestamp = System.currentTimeMillis() 
+                    if (type == "relaxed" && lastNotificationSent == "relaxed") {
+                        // Duplicated relaxed notifications aren't sended
+                    }
+                    else {
+                        sendNotification(type)
+                    }
 
-                    // Insert the prediction into the Room database
-                    dao.insert(PredictedLevel(timestamp = timestamp, livelloStanchezza = mostFrequent))
-
-                    // If 50 times in the last 60 predictions the user is above threshold, it sends notifications
-                    processMostFrequent(mostFrequent, threshold)
-
-                    // Clear the list to start collecting the next 5 predictions
-                    predictions.clear()
+                    predictionBuffer.clear()
                 }
 
                 // Wait for the specified interval (in milliseconds) before next prediction
@@ -164,43 +160,6 @@ class MentalWorkloadProcessor(
         )
     }
 
-    // Function that controls if send the notification
-    fun processMostFrequent(mostFrequent: Int, threshold: Int) {
-        // Insertion in the circular buffer
-        ringBuffer[bufferIndex] = mostFrequent
-        bufferIndex = (bufferIndex + 1) % ringBuffer.size
-        insertionCounter++
-
-        // Check only after 60 insertions
-        if (insertionCounter == 60) {
-            val countAbove = ringBuffer.count { it >= threshold }
-            val countBelow = ringBuffer.count { it < threshold }
-
-            // Selection of the notification type
-            val notificationType = when {
-                countAbove >= 50 -> "fatigue"
-                countBelow >= 50 -> "relaxed"
-                else -> null
-            }
-
-            notificationType?.let { type ->
-                if (lastNotificationSent == type && skipNextNotification) {
-                    skipNextNotification = false
-                } else if (lastNotificationSent == type) {
-                    skipNextNotification = true
-                } else {
-                    // Sending the notification
-                    sendNotification(type)
-                    lastNotificationSent = type
-                    skipNextNotification = false
-                }
-            }
-
-            // Reset of the counter
-            insertionCounter = 0
-        }
-    }
-
     // Function that sends the notification
     private fun sendNotification(type: String) {
         // Checking if "pause" (checkboxNotification) is set
@@ -217,8 +176,8 @@ class MentalWorkloadProcessor(
         // Text and title selection
         val (title, text) = when (type) {
             "fatigue" -> "Mental Fatigue Alert" to "High mental workload detected for extended period."
-            "relaxed" -> "Low Mental Workload Notification" to "Now you are fully rested!"
-            else -> return // In the case there are mixed values (not 50 values under threshold and not 50 over it)
+            "relaxed" -> "Low Mental Workload Notification" to "Now you are fully rested, go back to work!"
+            else -> return // Unknown type
         }
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -229,7 +188,9 @@ class MentalWorkloadProcessor(
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
-        notificationManager.notify(1001, notification)
+        lastNotificationSent = type
+
+        notificationManager.notify(1005, notification)
     }
 
 }
