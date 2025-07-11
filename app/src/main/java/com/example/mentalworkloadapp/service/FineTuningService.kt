@@ -97,7 +97,8 @@ class FineTuningService : Service() {
 
 
             val availableSessions=sampleEegDao.getSessionOrderedById(MIN_SESSIONS_REQUIRED)
-            Log.d("Fine tuning service","available session found :$availableSessions.size")
+            val ssize=availableSessions.size
+            Log.d("Fine tuning service","available session found :$ssize")
             // Checking if there is enough data
 
             if (availableSessions.size < MIN_SESSIONS_REQUIRED) {
