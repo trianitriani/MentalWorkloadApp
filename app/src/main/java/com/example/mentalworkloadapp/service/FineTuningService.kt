@@ -82,6 +82,7 @@ class FineTuningService : Service() {
     private suspend fun fineTuning() {
         val sampleEegDao = DatabaseProvider.getDatabase(this).sampleEegDao()
         val repository = EegRepository(sampleEegDao)
+        val MIN_SESSIONS_REQUIRED = 20
 
         try {
 
@@ -93,18 +94,14 @@ class FineTuningService : Service() {
                 restoreModelFromCheckpointFile(this,interpreter)
             }
 
-            //getting the number of session available
-            val SAMPLES_PER_SESSION = 18000 // 3 minutes of data (3 * 60 * 100)
-            val SAMPLES_PER_MINI_SESSION = 180  // 1.8 seconds of data (1.8 * 100)
 
 
-            val samplesAvailable=sampleEegDao.countSamples()
-            val sessionsAvailable:Int= (samplesAvailable/SAMPLES_PER_SESSION).toInt()
+            val availableSessions=sampleEegDao.getSessionOrderedById(MIN_SESSIONS_REQUIRED)
             // Checking if there is enough data
-            val MIN_SESSIONS_REQUIRED = 4
-            if (sessionsAvailable < MIN_SESSIONS_REQUIRED) {
+
+            if (availableSessions.size < MIN_SESSIONS_REQUIRED) {
                 withContext(Dispatchers.Main) {
-                    notificationHelper.showNotification(notificationHelper.createNotEnoughDataErrorNotification(MIN_SESSIONS_REQUIRED-sessionsAvailable), FineTuningNotification.NOTIFICATION_ID + 3)
+                    notificationHelper.showNotification(notificationHelper.createNotEnoughDataErrorNotification(MIN_SESSIONS_REQUIRED-availableSessions.size), FineTuningNotification.NOTIFICATION_ID + 3)
                 }
                 stopSelf() // Stop the service if not enough data
                 return
@@ -113,13 +110,10 @@ class FineTuningService : Service() {
             //for 5 epochs
             for (j in 0  until 5) {
                 //for each session
-                val sessionOrder = (0 until sessionsAvailable).shuffled()
+                val sessionOrder = availableSessions.shuffled()
                 for (i in sessionOrder) {
                     //get the samples from database, considering last 32 seconds
-                    val rawSamples = sampleEegDao.getSessionSamplesOrderedByTimestamp(
-                        limit = 3200,
-                        offset = i * 18000
-                    )
+                    val rawSamples = sampleEegDao.getSessionSamplesById(i)
                     //get label for the current session, get the label of the last sample
                     // in the session
                     val yTrain = rawSamples[0].tiredness.toFloat()
