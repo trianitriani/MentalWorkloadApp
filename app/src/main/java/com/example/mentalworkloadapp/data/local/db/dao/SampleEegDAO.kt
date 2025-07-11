@@ -40,18 +40,25 @@ interface SampleEegDAO {
     suspend fun getSessionSamplesOrderedByTimestamp(limit:Int , offset: Int): List<SampleEeg>
 
     @Query("""
-        SELECT * FROM SampleEeg 
-        WHERE timestamp >= :cutoffTimestamp 
+        SELECT * 
+        FROM SampleEeg 
+        WHERE tiredness = -1
         ORDER BY timestamp DESC 
         LIMIT :count
     """)
-    suspend fun getLastNSamplesOfLastSession(count: Int, cutoffTimestamp: Long): List<SampleEeg>
+    suspend fun getLastNSamplesOfLastSession(count: Int): List<SampleEeg>
+
+    @Query("""
+        SELECT MAX(session_id)
+        FROM SampleEeg
+    """)
+    suspend fun getLastSessionId() : Int?
 
     // query for delete samples before a threshold timestamp
     @Query("DELETE FROM SampleEeg WHERE timestamp < :thresholdTimestamp")
     suspend fun deleteSamplesFrom(thresholdTimestamp: Long)
 
-    @Query("DELETE FROM SampleEeg WHERE tiredness = 0")
+    @Query("DELETE FROM SampleEeg WHERE tiredness = -1")
     suspend fun deleteSamplesWithoutTiredness()
 
     // query for setting the tiredness when a user vote
@@ -65,4 +72,7 @@ interface SampleEegDAO {
     //query to delete all the data in the database
     @Query("DELETE FROM SampleEeg")
     suspend fun deleteAllData() : Int
+
+    @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :count")
+    suspend fun getLastNRawSamples(count: Int): List<SampleEeg>
 }

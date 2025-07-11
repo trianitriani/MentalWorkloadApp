@@ -94,12 +94,17 @@ class FineTuningService : Service() {
             }
 
             //getting the number of session available
+            val SAMPLES_PER_SESSION = 18000 // 3 minutes of data (3 * 60 * 100)
+            val SAMPLES_PER_MINI_SESSION = 180  // 1.8 seconds of data (1.8 * 100)
+
+
             val samplesAvailable=sampleEegDao.countSamples()
-            val sessionsAvailable:Int= (samplesAvailable/18000L).toInt()
+            val sessionsAvailable:Int= (samplesAvailable/SAMPLES_PER_SESSION).toInt()
             // Checking if there is enough data
-            if (sessionsAvailable < 20) {
+            val MIN_SESSIONS_REQUIRED = 4
+            if (sessionsAvailable < MIN_SESSIONS_REQUIRED) {
                 withContext(Dispatchers.Main) {
-                    notificationHelper.showNotification(notificationHelper.createNotEnoughDataErrorNotification(20-sessionsAvailable), FineTuningNotification.NOTIFICATION_ID+2)
+                    notificationHelper.showNotification(notificationHelper.createNotEnoughDataErrorNotification(MIN_SESSIONS_REQUIRED-sessionsAvailable), FineTuningNotification.NOTIFICATION_ID + 3)
                 }
                 stopSelf() // Stop the service if not enough data
                 return

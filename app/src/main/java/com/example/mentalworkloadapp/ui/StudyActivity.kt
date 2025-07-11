@@ -22,6 +22,8 @@ import com.example.mentalworkloadapp.util.LanguageUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
+
 
 class StudyActivity : BaseActivity() {
     private lateinit var buttonStart: Button
@@ -110,9 +112,21 @@ class StudyActivity : BaseActivity() {
             Log.d("Session Study", "I'm starting now to study")
             // now we have to starting the service
             if (!EegSamplingService.isRunning) {
+                // now we update the session id
+                var id = sharedPref.getInt("session_id", -1);
+                if(id == -1){
+                    val eegDao = DatabaseProvider.getSampleEegDao(context = this)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        id = eegDao.getLastSessionId() ?: 1
+                    }
+                }
+                // update the shared preferences with the new session id
+                sharedPref.edit() {
+                    putInt("session_id", id + 1)
+                }
+
                 val intent = Intent(this, EegSamplingService::class.java)
                 ContextCompat.startForegroundService(this, intent)
-                Log.d("Session Study", "Il service dovrebbe runnare")
             } else {
                 Log.d("Session Study", "Il service non sta runnando")
             }
@@ -149,16 +163,16 @@ class StudyActivity : BaseActivity() {
         // when the user click one emoji, he wants to vote his mental workload at the end
         // of the session of study
         emojiFresh.setOnClickListener {
-            vote(sharedPref, 1)
+            vote(sharedPref, 0)
         }
         emojiNeutral.setOnClickListener {
-            vote(sharedPref, 2)
+            vote(sharedPref, 1)
         }
         emojiTired.setOnClickListener {
-            vote(sharedPref, 3)
+            vote(sharedPref, 2)
         }
         emojiSleep.setOnClickListener {
-            vote(sharedPref, 4)
+            vote(sharedPref, 3)
         }
 
         checkboxNotification.setOnCheckedChangeListener { _, isChecked ->
@@ -204,26 +218,14 @@ class StudyActivity : BaseActivity() {
         // now we have to vote that emoji
         val eegDao = DatabaseProvider.getSampleEegDao(context = this)
         CoroutineScope(Dispatchers.IO).launch {
-            // assign a vote to the last samples (180 * 100 samples from now, last 3 minutes)
-            val cutoff = System.currentTimeMillis() - 4 * 60 * 1000;
-            val samples = eegDao.getLastNSamplesOfLastSession(180 * 100, cutoff);
-            val updatedSamples = samples.map { sample ->
-                SampleEeg (
-                    timestamp = sample.timestamp,
-                    ch_c1 = sample.ch_c1,
-                    ch_c2 = sample.ch_c2,
-                    ch_c3 = sample.ch_c3,
-                    ch_c4 = sample.ch_c4,
-                    ch_c5 = sample.ch_c5,
-                    ch_c6 = sample.ch_c6,
-                    ch_r_ear = sample.ch_r_ear,
-                    ch_l_ear = sample.ch_l_ear,
-                    tiredness = vote
-                )
+            DatabaseProvider.dbMutex.withLock {
+                val samples = eegDao.getLastNSamplesOfLastSession(32 * 500)
+                val updatedSamples = samples.map { sample ->
+                    sample.copy(tiredness = vote)
+                }
+                eegDao.updateSamplesEeg(updatedSamples)
+                eegDao.deleteSamplesWithoutTiredness()
             }
-            eegDao.updateSamplesEeg(updatedSamples)
-            // remove all the samples without vote
-            eegDao.deleteSamplesWithoutTiredness()
         }
         sharedPref.edit() {
             putString("phase", "rest")
