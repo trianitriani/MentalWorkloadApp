@@ -19,7 +19,6 @@ import androidx.core.app.NotificationCompat
 import android.util.Log
 import com.example.mentalworkloadapp.R
 import android.content.SharedPreferences
-import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevel
 import com.example.mentalworkloadapp.util.checkPointFileExists
 import com.example.mentalworkloadapp.util.restoreModelFromCheckpointFile
 
