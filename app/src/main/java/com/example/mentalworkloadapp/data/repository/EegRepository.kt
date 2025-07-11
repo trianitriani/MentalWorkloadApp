@@ -21,8 +21,6 @@ class EegRepository(private val dao: SampleEegDAO) {
         // Calculate how many raw samples we need to fetch from the DB to get the required number of downsampled samples.
         val rawSamplesNeeded = requiredSamples * downsampleFactor // 128 * 5 = 640
 
-        // Calculates how many samples are needed to cover n seconds (e.g., 10s * 100Hz = 1000 samples)
-        val samplesNeeded = nSeconds * samplingFreq
 
         val recentRawSamples = dao.getLastNRawSamples(rawSamplesNeeded).reversed()
 
@@ -77,6 +75,6 @@ class EegRepository(private val dao: SampleEegDAO) {
             chData[5][i] = sample.ch_c6
         }
 
-        return EegFeatureExtractor.extractFeaturesMatrix(chData, targetSamplingFreq)
+        return EegFeatureExtractor.EXPERIMENTALextractFeaturesMatrix(chData, 100)
     }
 }

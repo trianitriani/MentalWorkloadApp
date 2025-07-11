@@ -88,7 +88,7 @@ class FineTuningService : Service() {
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
             //check if checkpoint file exists
-            if(checkPointFileExists()){
+            if(checkPointFileExists(this)){
                 //load personalized model
                 restoreModelFromCheckpointFile(this,interpreter)
             }
