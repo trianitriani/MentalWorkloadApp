@@ -15,7 +15,7 @@ class EegRepository(private val dao: SampleEegDAO) {
         val samplingFreq = 100
 
         // Calculates how many samples are needed to cover n seconds (e.g., 10s * 100Hz = 1000 samples)
-        val samplesNeeded = nSeconds * samplingFreq
+        val samplesNeeded = nSeconds * 500
 
         // Retrieves all EEG samples from the database ordered by ascending timestamp
         val allSamples = dao.getAllSamplesOrderedByTimestamp()
@@ -64,6 +64,6 @@ class EegRepository(private val dao: SampleEegDAO) {
             chData[5][i] = sample.ch_c6
         }
 
-        return EegFeatureExtractor.EXPERIMENTALextractFeaturesMatrix(chData, 100)
+        return EegFeatureExtractor.extractFeaturesMatrix(chData, 100)
     }
 }

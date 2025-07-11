@@ -214,8 +214,15 @@ object EegFeatureExtractor {
         return Array(6) { chIdx ->
             // Select current channel signal (preprocessed)
             val signal = preprocessedChannels[chIdx]
+            //Low pass filter prevent aliasing for subsampling
+            val lowFilteredSignal = butterworthLowPassFilter(signal,50.0,500.0)
+            //Subsampling from 500 Hz to 100 Hz
+            val subsampledSignal = subsample(lowFilteredSignal,5)
+            //Reducing noise in 50 Hz range
+            val notchFilterdSignal = fastNotch50Hz(subsampledSignal,samplingRate)
             // Compute frequencies and PSD for the signal
-            val (freqs, psd) = computePSD(signal, samplingRate)
+            val (freqs, psd) = computeWelchMethodPSD(notchFilterdSignal, samplingRate)
+
 
             // Calculate absolute and relative powers for EEG bands
             val absDelta = bandPower(freqs, psd, 0.5, 4.0)
@@ -253,6 +260,7 @@ object EegFeatureExtractor {
         }
     }
 
+    /*
     fun EXPERIMENTALextractFeaturesMatrix(channels: Array<DoubleArray>, samplingRate: Int): Array<FloatArray> {
         // Create an array of FloatArrays, one per channel (6 channels)
         return Array(6) { chIdx ->
@@ -303,7 +311,7 @@ object EegFeatureExtractor {
             )
         }
     }
-
+*/
     // Flatten a 2D features matrix into a 1D FloatArray for the model .tflite
     fun flattenFeaturesMatrix(featuresMatrix: Array<FloatArray>): FloatArray =
         featuresMatrix.flatMap { it.asList() }.toFloatArray()
