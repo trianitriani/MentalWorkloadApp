@@ -8,9 +8,6 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.io.FileInputStream
-import java.io.File
-import com.example.mentalworkloadapp.data.local.db.AppDatabase
-import com.example.mentalworkloadapp.util.EegFeatureExtractor
 import com.example.mentalworkloadapp.data.repository.EegRepository
 import com.example.mentalworkloadapp.notification.EegSamplingNotification
 import com.example.mentalworkloadapp.data.local.db.DatabaseProvider
@@ -18,11 +15,6 @@ import android.app.NotificationManager
 import androidx.core.app.NotificationCompat
 import android.util.Log
 import com.example.mentalworkloadapp.R
-import android.content.SharedPreferences
-import com.example.mentalworkloadapp.data.local.db.entitiy.PredictedLevel
-import com.example.mentalworkloadapp.util.checkPointFileExists
-import com.example.mentalworkloadapp.util.restoreModelFromCheckpointFile
-
 
 
 class MentalWorkloadProcessor(
@@ -47,20 +39,16 @@ class MentalWorkloadProcessor(
     var lastNotificationSent: String? = null
     private var firstNotificationSent = false
 
-
-
     // Function to start the periodic inference loop
     fun start() {
         // Initialize the interpreter if not already initialized
         if (::interpreter.isInitialized.not()) {
-
             //load base model
             interpreter = Interpreter(loadModelFile("model.tflite"))
             //check if checkpoint file exists
             if(checkPointFileExists(context)){
                 //load personalized model
                 restoreModelFromCheckpointFile(context, interpreter)
-
             }
         }
         // If the job is already active (start was already called), do nothing
@@ -98,31 +86,29 @@ class MentalWorkloadProcessor(
                 // Find the index of the class with the highest probability
                 val predictedClass = output[0].indices.maxByOrNull { output[0][it] } ?: 0
 
-                // The predition is saved in the temporary buffer
+                // The prediction is saved in the temporary buffer
                 predictionBuffer.add(predictedClass)
 
-                // The first notification is checked after every 5 predictions
+                // The first notification is checked after 5 predictions
                 if (!firstNotificationSent && predictionBuffer.size == 5) {
                     val mostFrequent = predictionBuffer.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: predictedClass
                     if (mostFrequent >= threshold) {
                         sendNotification("fatigue")
                         firstNotificationSent = true
-                    }
-                    predictionBuffer.clear()
+                        predictionBuffer.clear()
+                    } else predictionBuffer.removeAt(0)
                 }
-                // The other notifications are checked every 17 predictions
-                else if (firstNotificationSent && predictionBuffer.size == 17) {
+
+                // The others notifications are checked every 17 predictions
+                else if (firstNotificationSent && predictionBuffer.size == 18) {
                     val mostFrequent = predictionBuffer.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: predictedClass
                     val type = if (mostFrequent >= threshold) "fatigue" else "relaxed"
 
-                    if (type == "relaxed" && lastNotificationSent == "relaxed") {
-                        // Duplicated relaxed notifications aren't sended
-                    }
-                    else {
+                    // Avoid sending duplicate 'relaxed' notifications
+                    if (type != "relaxed" || lastNotificationSent != "relaxed"){
                         sendNotification(type)
-                    }
-
-                    predictionBuffer.clear()
+                        predictionBuffer.clear()
+                    } else predictionBuffer.removeAt(0)
                 }
 
                 // Wait for the specified interval (in milliseconds) before next prediction

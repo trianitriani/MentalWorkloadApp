@@ -18,7 +18,6 @@ class EegRepository(private val dao: SampleEegDAO) {
         // Calculate how many raw samples we need to fetch from the DB to get the required number of downsampled samples.
         val rawSamplesNeeded = requiredSamples * downsampleFactor // 128 * 5 = 640
 
-
         val recentRawSamples = dao.getLastNRawSamples(rawSamplesNeeded).reversed()
 
         if (recentRawSamples.size < rawSamplesNeeded) {
