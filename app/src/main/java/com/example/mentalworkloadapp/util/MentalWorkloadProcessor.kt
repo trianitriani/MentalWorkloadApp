@@ -77,15 +77,19 @@ class MentalWorkloadProcessor(
                     rewind()
                 }
 
+                // Create the map for the signature's inputs. The input tensor is named 'x'.
+                val inputs = mapOf("x" to input)
+
                 // Output buffer: model outputs 4 class probabilities (float array)
-                val output = Array(1) { FloatArray(4) }
+                val outputBuffer = Array(1) { FloatArray(4) }
+                // Create the map for the signature's outputs. The output tensor is named 'output'.
+                val outputs = mapOf("output" to outputBuffer)
 
-                // Run the model with input and output buffers
-                interpreter.run(input, output)
+                // Run the 'predict' signature explicitly
+                interpreter.runSignature(inputs, outputs, "predict")
 
-                // Find the index of the class with the highest probability
-                val predictedClass = output[0].indices.maxByOrNull { output[0][it] } ?: 0
-
+                // Find the index of the class with the highest probability from the output buffer
+                val predictedClass = outputBuffer[0].indices.maxByOrNull { outputBuffer[0][it] } ?: 0
                 // The prediction is saved in the temporary buffer
                 predictionBuffer.add(predictedClass)
 
