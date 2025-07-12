@@ -10,23 +10,21 @@ class EegRepository(private val dao: SampleEegDAO) {
 
     // This function returns the feature matrix for the last n seconds
     suspend fun getFeaturesMatrixForLastNSeconds(nSeconds: Int): Array<FloatArray> {
+        // Calculates how many samples are needed to cover n seconds this (or some other constant) likely must be a power of two for the JWave library.  2^14 = 16384. This is close to the intended 32 seconds * 500 Hz = 16000 samples.
+        val samplesNeeded = 16384
 
-        // Sampling frequency of the EEG data (100 Hz)
-        val samplingFreq = 100
+        // Use the efficient DAO method to get only the last N samples
+        val recentSamplesDescending = dao.getLastNRawSamples(samplesNeeded)
 
-        // Calculates how many samples are needed to cover n seconds (e.g., 10s * 100Hz = 1000 samples)
-        val samplesNeeded = nSeconds * 500
-
-        // Retrieves all EEG samples from the database ordered by ascending timestamp
-        val allSamples = dao.getAllSamplesOrderedByTimestamp()
-
-        // Throws an exception if there aren't enough samples to cover the requested period
-        if (allSamples.size < samplesNeeded) {
-            throw IllegalArgumentException("Not enough data samples in database")
+        // Check if we have enough data
+        if (recentSamplesDescending.size < samplesNeeded) {
+            Log.e("EegRepository", "Not enough data samples in database. Needed: $samplesNeeded, Found: ${recentSamplesDescending.size}")
+            // Return an empty array
+            return emptyArray()
         }
 
-        // Takes only the last samplesNeeded samples, i.e., the last n seconds of data
-        val recentSamples = allSamples.takeLast(samplesNeeded)
+        // Reverse the list to have samples in ascending chronological order for processing
+        val recentSamples = recentSamplesDescending.reversed()
 
         // Initializes a 2D array: 6 EEG channels, each with samplesNeeded double values
         val chData = Array(6) { DoubleArray(samplesNeeded) }
@@ -34,7 +32,6 @@ class EegRepository(private val dao: SampleEegDAO) {
         // Extracts the values of the 6 channels for each sample and stores them in chData matrix
         for (i in 0 until samplesNeeded) {
             val sample = recentSamples[i]
-
             chData[0][i] = sample.ch_c1
             chData[1][i] = sample.ch_c2
             chData[2][i] = sample.ch_c3
@@ -43,8 +40,8 @@ class EegRepository(private val dao: SampleEegDAO) {
             chData[5][i] = sample.ch_c6
         }
 
-        // Passes the data matrix and sampling frequency to the EegFeatureExtractor
-        return EegFeatureExtractor.extractFeaturesMatrix(chData, samplingFreq)
+        // Pass the data matrix and sampling frequency to the EegFeatureExtractor
+        return EegFeatureExtractor.extractFeaturesMatrix(chData, 100) // samplingFreq is 100
     }
 
     suspend fun getFeaturesMatrixSessionSamples(sessionSamples: List<SampleEeg>): Array<FloatArray> {
