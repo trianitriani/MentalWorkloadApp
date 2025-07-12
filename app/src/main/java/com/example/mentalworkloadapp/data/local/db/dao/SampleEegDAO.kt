@@ -80,6 +80,10 @@ interface SampleEegDAO {
     @Query("DELETE FROM SampleEeg")
     suspend fun deleteAllData() : Int
 
+    //query to delete the samples of a specific session by id
+    @Query("DELETE FROM SampleEeg WHERE id==:sessionId")
+    suspend fun deleteSessionById(sessionId:Int) : Int
+
     @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :count")
     suspend fun getLastNRawSamples(count: Int): List<SampleEeg>
 }

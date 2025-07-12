@@ -83,6 +83,7 @@ class FineTuningService : Service() {
         val sampleEegDao = DatabaseProvider.getDatabase(this).sampleEegDao()
         val repository = EegRepository(sampleEegDao)
         val MIN_SESSIONS_REQUIRED = 20
+        val N_EPOCHS = 20
 
         try {
 
@@ -98,7 +99,7 @@ class FineTuningService : Service() {
 
             val availableSessions=sampleEegDao.getSessionOrderedById(MIN_SESSIONS_REQUIRED)
             val ssize=availableSessions.size
-            Log.d("Fine tuning service","available session found :$ssize")
+
             // Checking if there is enough data
 
             if (availableSessions.size < MIN_SESSIONS_REQUIRED) {
@@ -110,7 +111,7 @@ class FineTuningService : Service() {
             }
 
             //for 5 epochs
-            for (j in 0  until 5) {
+            for (j in 0  until N_EPOCHS) {
                 //for each session
                 val sessionOrder = availableSessions.shuffled()
                 for (i in sessionOrder) {
@@ -155,12 +156,12 @@ class FineTuningService : Service() {
             interpreter.runSignature(inputs, outputs, "save")
 
             //deleting the data in the database, not useful anymore <-- TEMPORARILY DISABLED
-            /*if(sampleEegDao.deleteAllData()<=0){
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@FineTuningService, "Error occurred deleting the database data", Toast.LENGTH_SHORT).show()
-                }
-                stopSelf()
-                return
+            /*
+            for(i in sessionOrder){
+
+            if(sampleEegDao.deleteSessionById(i)<=0){
+                Log.e("Fine tuning service","error occured trying to delete session :$i")
+            }
             }*/
             withContext(Dispatchers.Main) {
                 notificationHelper.showNotification(notificationHelper.createFineTuningSuccessNotification(), FineTuningNotification.NOTIFICATION_ID+1)
