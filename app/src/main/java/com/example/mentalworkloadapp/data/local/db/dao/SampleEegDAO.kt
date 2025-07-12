@@ -35,9 +35,16 @@ interface SampleEegDAO {
     @Query("SELECT * FROM SampleEeg ORDER BY timestamp ASC")
     suspend fun getAllSamplesOrderedByTimestamp(): List<SampleEeg>
 
-    // query to getting last 50 samples ordered by timestamp
+    // query to getting last 50 samples ordered by timestamp , DEPRECATED Since we have IDs
     @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :limit OFFSET :offset")
     suspend fun getSessionSamplesOrderedByTimestamp(limit:Int , offset: Int): List<SampleEeg>
+
+    @Query("SELECT id FROM SampleEeg ORDER BY id ASC LIMIT :limit")
+    suspend fun getSessionOrderedById(limit:Int): List<Long>
+
+    @Query("SELECT * FROM SampleEeg WHERE id == :sessionId ORDER BY id ASC")
+    suspend fun getSessionSamplesById(sessionId:Long): List<SampleEeg>
+
 
     @Query("""
         SELECT * 
@@ -72,6 +79,10 @@ interface SampleEegDAO {
     //query to delete all the data in the database
     @Query("DELETE FROM SampleEeg")
     suspend fun deleteAllData() : Int
+
+    //query to delete the samples of a specific session by id
+    @Query("DELETE FROM SampleEeg WHERE id==:sessionId")
+    suspend fun deleteSessionById(sessionId:Int) : Int
 
     @Query("SELECT * FROM SampleEeg ORDER BY timestamp DESC LIMIT :count")
     suspend fun getLastNRawSamples(count: Int): List<SampleEeg>

@@ -18,6 +18,8 @@ import java.nio.channels.FileChannel
 import android.widget.Toast
 import com.example.mentalworkloadapp.notification.FineTuningNotification
 import android.app.NotificationManager
+import com.example.mentalworkloadapp.util.checkPointFileExists
+import com.example.mentalworkloadapp.util.restoreModelFromCheckpointFile
 
 
 class FineTuningService : Service() {
@@ -80,76 +82,71 @@ class FineTuningService : Service() {
     private suspend fun fineTuning() {
         val sampleEegDao = DatabaseProvider.getDatabase(this).sampleEegDao()
         val repository = EegRepository(sampleEegDao)
+        val MIN_SESSIONS_REQUIRED = 20
+        val N_EPOCHS = 20
 
         try {
+
             val modelFile = loadModelFromFile("trainable_model.tflite")
             val interpreter = Interpreter(modelFile)
+            //check if checkpoint file exists
+            if(checkPointFileExists(this)){
+                //load personalized model
+                restoreModelFromCheckpointFile(this,interpreter)
+            }
 
-            //getting the number of session available
-            val SAMPLES_PER_SESSION = 18000 // 3 minutes of data (3 * 60 * 100)
-            val SAMPLES_PER_MINI_SESSION = 180  // 1.8 seconds of data (1.8 * 100)
 
 
-            val samplesAvailable=sampleEegDao.countSamples()
-            val sessionsAvailable:Int= (samplesAvailable/SAMPLES_PER_SESSION).toInt()
+            val availableSessions=sampleEegDao.getSessionOrderedById(MIN_SESSIONS_REQUIRED)
+            val ssize=availableSessions.size
+
             // Checking if there is enough data
-            val MIN_SESSIONS_REQUIRED = 4
-            if (sessionsAvailable < MIN_SESSIONS_REQUIRED) {
+
+            if (availableSessions.size < MIN_SESSIONS_REQUIRED) {
                 withContext(Dispatchers.Main) {
-                    notificationHelper.showNotification(notificationHelper.createNotEnoughDataErrorNotification(MIN_SESSIONS_REQUIRED-sessionsAvailable), FineTuningNotification.NOTIFICATION_ID + 3)
+                    notificationHelper.showNotification(notificationHelper.createNotEnoughDataErrorNotification(MIN_SESSIONS_REQUIRED-availableSessions.size), FineTuningNotification.NOTIFICATION_ID + 3)
                 }
                 stopSelf() // Stop the service if not enough data
                 return
             }
 
-            //for each 3-min session
-            for (i in 0 until sessionsAvailable){
-                //get the samples from database
-                val rawSamples= sampleEegDao.getSessionSamplesOrderedByTimestamp(limit = SAMPLES_PER_SESSION, offset = i* SAMPLES_PER_SESSION)
-                //get label for the current session, get the label of the last sample
-
-                val labelIndex = rawSamples[0].tiredness - 1 // Convert 1-4 to 0-3 index
-                if (labelIndex < 0 || labelIndex > 3) {
-                    Log.w(TAG, "Skipping session with invalid label: ${rawSamples[0].tiredness}")
-                    continue
-                }
-
-                // Create a one-hot encoded array
-                val yTrain = FloatArray(4) { 0f }
-                yTrain[labelIndex] = 1f
-                // Segment the 18,000 samples into 100 chunks of 180 samples each
-                val miniSessions = rawSamples.chunked(SAMPLES_PER_MINI_SESSION)
-                //extract features from the session samples
-
-                miniSessions.forEachIndexed { chunkIndex, miniSessionSamples ->
-                    // Ensure the chunk is the correct size before processing
-                    if (miniSessionSamples.size == SAMPLES_PER_MINI_SESSION) {
-                        // Extract features from the current 180-sample chunk
-                        val featuresMatrix = repository.getFeaturesMatrixSessionSamples(miniSessionSamples)
-
-                        if (featuresMatrix.any { it.isEmpty() }) {
-                            Log.e(TAG, "Feature matrix for chunk $chunkIndex in session $i was empty. Skipping.")
-                            return@forEachIndexed // Skips to the next iteration of the loop
+            //for 5 epochs
+            for (j in 0  until N_EPOCHS) {
+                //for each session
+                val sessionOrder = availableSessions.shuffled()
+                for (i in sessionOrder) {
+                    //get the samples from database, considering last 32 seconds
+                    val rawSamples = sampleEegDao.getSessionSamplesById(i)
+                    //get label for the current session, get the label of the last sample
+                    // in the session
+                    val yTrain = rawSamples[0].tiredness.toFloat()
+                    //extract features from the session samples
+                    val featuresMatrix = repository.getFeaturesMatrixSessionSamples(rawSamples)
+                    if (featuresMatrix.isEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            notificationHelper.showNotification(
+                                notificationHelper.createGenericErrorNotification(),
+                                FineTuningNotification.NOTIFICATION_ID + 2
+                            )
                         }
-
-                        // Flatten the feature matrix
-                        val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
-
-                        // Prepare the inputs for the model's 'train' signature.
-                        val trainInputs = mapOf(
-                            "x" to arrayOf(xTrain),
-                            "y" to arrayOf(yTrain)
-                        )
-
-                        val trainOutputs = mutableMapOf<String, Any>()
-
-                        // Run one training step on the current 1.8-second chunk
-                        interpreter.runSignature(trainInputs, trainOutputs, "train")
-                    } else {
-                        Log.w(TAG, "Skipping a mini-session chunk with incorrect size: ${miniSessionSamples.size}")
+                        stopSelf()
+                        return
                     }
+                    //flatten the feature matrix
+                    val xTrain = EegFeatureExtractor.flattenFeaturesMatrix(featuresMatrix)
+                    //create data structure to pass to model
+                    val trainInputs = mapOf(
+                        "x" to xTrain,
+                        "y" to yTrain
+                    )
+                    val trainOutputs = mutableMapOf<String, Any>(
+                        "loss" to FloatArray(1)
+                    )
+                    //run a training stage
+                    interpreter.runSignature(trainInputs, trainOutputs, "train")
                 }
             }
+
 
             // Export the trained weights as a checkpoint file.
             val outputFile = File(filesDir, "checkpoint.ckpt")
@@ -157,15 +154,14 @@ class FineTuningService : Service() {
             inputs["checkpoint_path"] = outputFile.absolutePath
             val outputs: Map<String, Any> = HashMap()
             interpreter.runSignature(inputs, outputs, "save")
-            Log.d(TAG, "Successfully saved fine-tuned model to ${outputFile.absolutePath}")
 
             //deleting the data in the database, not useful anymore <-- TEMPORARILY DISABLED
-            /*if(sampleEegDao.deleteAllData()<=0){
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@FineTuningService, "Error occurred deleting the database data", Toast.LENGTH_SHORT).show()
-                }
-                stopSelf()
-                return
+            /*
+            for(i in sessionOrder){
+
+            if(sampleEegDao.deleteSessionById(i)<=0){
+                Log.e("Fine tuning service","error occured trying to delete session :$i")
+            }
             }*/
             withContext(Dispatchers.Main) {
                 notificationHelper.showNotification(notificationHelper.createFineTuningSuccessNotification(), FineTuningNotification.NOTIFICATION_ID+1)

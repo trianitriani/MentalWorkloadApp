@@ -3,6 +3,9 @@ package com.example.mentalworkloadapp.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.wifi.WifiInfo
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -85,6 +88,7 @@ class EegSamplingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("EegService", "Service starting...")
         startForeground(EegSamplingNotification.NOTIF_ID, EegSamplingNotification(this).createNotification())
+        Log.d("EegService", "startForeground() chiamato fine")
         isRunning = true
         // Initialize lastSampling timestamp to now
         lastSampling = System.currentTimeMillis()
@@ -173,6 +177,7 @@ class EegSamplingService : Service() {
         networkCheckHandler.removeCallbacks(networkCheckRunnable)
         isRunning = false
         if (isServerManagerActive) {
+            // stop the server and clean up resources
             serverManager.stop()
             isServerManagerActive = false
         }
