@@ -13,8 +13,7 @@ data class SampleEeg(
     var id: Long = 0,
 
     // Make timestamp a regular, indexed column for fast queries
-    @ColumnInfo(index = true)
-    val timestamp: Long,
+    @ColumnInfo(name = "timestamp") val timestamp: Long,
 
     @ColumnInfo(name = "channel_c1") val ch_c1: Double,
     @ColumnInfo(name = "channel_c2") val ch_c2: Double,
