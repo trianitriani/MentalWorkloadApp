@@ -1,0 +1,31 @@
+Git Commit:
+0a8cec4 2025-06-17 Lorenzo Valtriani Traductions
+138526f 2025-06-17 Lorenzo Valtriani Update LoaderActivity.kt
+16cd984 2025-06-12 Lorenzo Valtriani Update EegSamplingNotification.kt
+5ce95ae 2025-06-09 Lorenzo Valtriani Deploy on different language
+12cd0f8 2025-06-08 Lorenzo Valtriani Updrage of the user interface
+8af89a4 2025-06-03 Lorenzo Valtriani Check if the eeg is reachble
+ba02bdc 2025-05-28 Lorenzo Valtriani Layout of session of study
+27327a7 2025-05-25 Lorenzo Valtriani Starting to create service
+daacab3 2025-05-20 Lorenzo Valtriani Creation of the database
+52e3e57 2025-05-18 Lorenzo Valtriani Create a Graph and SignIn
+f1b0b95 2025-05-10 Lorenzo Valtriani Layout Login, Signup
+bcea64c 2025-05-08 Lorenzo Valtriani Update gradle.xml
+61d25e6 2025-05-07 Lorenzo Valtriani random commit
+bf4d56c 2025-04-30 Lorenzo Valtriani Update README.md
+426f420 2025-04-29 Lorenzo Valtriani Initial commit
+
+Commits number: 15
+
+Code Contribution:
+- Design and creation of the Activities of the application
+- Creation of the EegSamplingService
+- Connection Mindrove to the Device cheking if the service gets correctly the data
+- Creation of the SamplingEeg table on Room
+- Creation class to sending notification to the user 
+- Deploy the application in different Language and traduction of the text
+- Insert a shortcut for the user to allows notification in a starting page (the first time)
+
+No Code Contribution:
+- Find the original dataset to training the default model
+- Write the introduction, application workflow and first subchapter of the application architecture

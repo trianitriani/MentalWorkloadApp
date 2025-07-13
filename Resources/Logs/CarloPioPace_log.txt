@@ -1,0 +1,35 @@
+19/05/2025 Dataset conversion, creation of the pyhton script for splitting the dataset
+20/05/2025 Creation of the script for feature extraction from the dataset, time domain and frequency domain
+21/05/2025 Research for implementing the same feature extraction process on kotlin
+25/05/2025 Validating feed forward network as alternative to initial models xgboost and random forest
+12/06/2025 Introduced subsampling in the code, attempt for on-device training using python interpreter
+13/06/2025 Created service in app for model personalization
+14/06/2025 Created custom model for on-device training
+15/06/2025 Updates for on device training
+18/06/2025 On device training bug fixed, updates of the custom model
+19/06/2025 Correction fine tuning service on the documentation
+20/06/2025 Introduced notification for fine tuning service, optimization of custom model trying different optimizers and parameters to reduce loss
+21/06/2025 Balancing dataset, introduced notch filter, bug fixed for loading the model
+25/07/2025 Improved subsampling, introduced low pass filter and welch method 
+08/07/2025 Introduce epochs in the fine tuning service and order shuffling
+09/07/2025 Created splitted dataset for cross validation
+11/07/2025 Changed session retrieval method in the fine tuning service, fixed bugs
+
+
+
+Commits number: 30
+
+
+Code:
+	dataset_processing.ipynb
+	customFFN.py,customFFN_v2.py,customFFN_v3.py,customFFN_v4.py,customFFN_v5.py
+	FineTuningNotification.kt
+	FineTuningService.kt
+	LoadPersonalizedModel.kt
+
+	Notch filter,Butterworth filter,Welch method,subsampling inside EEGFeatureExtractor class
+	Loading of personalized model inside Mental workload processor
+	countSamples, deleteAllData, deleteSessionById,getSessionOrderedById,getSessionSamplesById, getSessionSamplesOrderedByTimestamp inside SampleEEgDao.kt
+	All permission related to fine tuning service inside Manifest
+	
+

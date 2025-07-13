@@ -1,0 +1,55 @@
+Name: Dawid Stecko
+
+My primary role was architecting the core data pipeline of the Selene application. I was responsible for the end-to-end data flow, from the initial MindRove SDK integration to implementing a performant, thread-safe persistence layer with Room. My key contributions involved architecting the batch processing system, ensuring data integrity with a Mutex, and delivering precisely structured data windows (e.g., 2^14 samples) to the signal processing and machine learning components. Additionally, I served as the sole data collector for our experimental evaluation and co-authored the analysis and conclusion sections of the final report.
+
+
+I. Total Commits: 18
+
+
+II. Lines of code (approximated from git history):
+- Lines Added: 757
+- Lines Deleted: 517
+
+Code contributions in those lines:
+1.  Core application & SDK integration:
+    -   Configured most of the `build.gradle.kts` with the project dependencies, including the MindRove SDK (`.aar` file) and Room.
+    -   Implemented the initial version of the application (`MainActivityHistory.kt` and commit e5cf93f) to connect to the MindRove headset, receive SensorData packets, and display live EEG data, verifying core SDK functionality.
+
+2.  Data persistence and management:
+    -   Co-designed database architecture (SampleEeg.kt, AppDatabase.kt, SampleEegDAO.kt): defined queries for efficient data storage and retrieval including the correct scaling factors for sensor data and fields for `session_id` and `tiredness`.
+    - aArchitected and implemented the thread-safe database provider (DatabaseProvider.kt, commit 84860f1) using a Mutex to prevent data corruption from race conditions during concurrent read/write operations.
+
+3.  Data pipeline and signal processing integration:
+    -   Overhauled the EegSamplingService.kt by implementing a batch-processing system (commit f7f1d88) to save EEG samples in batches of 250, improving performance and reducing device I/O overhead.
+    -   Refined EegRepository.kt to provide correctly sized data windows for analysis. I adapted the DAO queries to fetch exactly 16,384 samples (2^14), a power-of-two size required by the JWave FFT library (commit f7dbf27).
+    -   Debugged and stabilized the FineTuningService.kt, resolving context and type mismatch errors (commit 3ab7ef8) and ensuring that training data from the database was correctly shaped and fed to the model. running the service).
+
+4.  Training Data Integrity:
+    -   Contributed to the logic in `StudyActivity.kt` to label the last 16,000 samples (representing the final 32 seconds of a session at 500 Hz) with the user's self-reported fatigue rating.
+
+5.  Maintenance:
+    -   Provided the complete Polish translation (`values-pl/strings.xml`) for all user-facing strings.
+    -   Resolved numerous bugs throughout the development cycle, including permission handling (commit 1f81926), database versioning, and merge conflicts, ensuring a stable final codebase.
+
+
+
+III. DIARY OF NON-CODING ACTIVITIES:
+April 17-29, 2025:
+-   Conducted initial research into the MindRove Arc hardware and its Android SDK. Studied technical specifications, documentation, and example projects to understand the Wi-Fi communication protocol and the structure of the `SensorData` packets.
+
+May 5-14, 2025:
+-   Performed hands-on prototyping and testing with the MindRove headset. Developed a minimal test application to verify the device connection and confirm that EEG data packets were being correctly received and parsed on the Android device.
+
+May 15-25, 2025:
+-   Collaborated with the team to draft the initial project proposal. Co-authored the "Application Architecture" section of the report, specifically detailing the data acquisition, batching, and storage pipeline that I was responsible for building.
+
+June 1 - July 9, 2025:
+-   Acted as the primary and sole data collector for the experimental evaluation. Personally conducted all 34 study sessions, which generated the entire dataset used for the fine-tuning and validation of our personalized model. This involved wearing the headset for extended periods and carefully self-reporting fatigue levels after each session.
+-   Continuously performed data validation by inspecting the on-device Room database. I verified data integrity, checked for sampling rate consistency across sessions, and ensured session IDs, timestamps, and fatigue labels were recorded correctly.
+
+July 8-12, 2025:
+-   Analyzed and interpreted the experimental results for the final report. This involved:
+    -   Running the Python evaluation script to generate performance metrics for both the baseline and the fine-tuned models.
+    -   Analyzing the confusion matrices and classification reports to compare the models' performance, particularly the dramatic improvement in detecting "maximum fatigue."
+    -   Co-authoring the "Abstract", "Introduction" (Section 1), "Experimental Results" (Section 5) and "Conclusion" (Section 6) sections of the final report, synthesizing the findings and discussing their implications, limitations, and future work.
+-   Performed end-to-end integration testing of the final application. This involved merging all components (data pipeline, feature extraction, ML services, UI) and debugging the interactions to ensure a stable and functional product for submission.

@@ -1,0 +1,98 @@
+Zanin Andrea Log:
+
+- I trained and tested (using Python) several classification models (Random Forest, XGBoost, and a feedforward neural network) using feature matrices in both the time and frequency domains, extracted from the dataset "EEG recordings of 40 subjects to monitor induced stress." The goal was to obtain a baseline pre-trained model to be integrated into our application.
+Additionally, I wrote and applied a feature selection function to identify the 15 most relevant features, resulting in a final model that uses only these 15 features for each EEG channel.
+
+- I created the EegRepository class, with one method responsible for retrieving EEG voltage data from the database (sampleEegDao) recorded over the last n seconds, and structuring it into a matrix 6 x 500n (channel × list of voltages recorded with a 500 Hz Eeg).
+
+- I developed the EegFeatureExtractor class, which takes a voltage matrix as input and returns a 6×15 feature matrix. Each row, corresponding to a different EEG channel, contains the 15 features used for classification. These features belong to both the time and frequency domains, including, for example, the power of Alpha, Theta, and Delta bands.
+
+- I integrated into the main service of the app (EegSamplingService) a class named MentalWorkloadProcessor, which runs in the background on a one-second cycle: it retrieves the latest data via EegRepository, extracts features using EegFeatureExtractor, and feeds them into the model for inference.
+The component also manages notifications related to fatigue and rest suggestions, by analyzing the trend of the predicted mental workload levels over the last few minutes.
+
+- I implemented a preprocessing function, integrated into the EEGFeatureExtractor, which applies a Savitzky-Golay filter and a wavelet transform to the EEG voltage signals. This is done to reduce noise and artifacts before extracting the features.
+The function is based on the MATLAB script used in the pretraining dataset, ensuring that the data undergo the exact same processing during inference as they did during model training.
+
+- I performed a cross-validation of the model in Python using the same dataset employed for training the base model. The dataset was divided into 10 stages, each containing different sets of matrices for training and testing. Additionally, I carried out an evaluation of the fine-tuning process to assess potential improvements in model performance. For this phase, I used 34 study sessions collected during the testing phase of the app: 20 sessions were used for fine-tuning training and 14 for fine-tuning testing.
+
+- I have written the documentation chapters related to my contribution to the project, focusing on the training phase of the base model. These include:
+4 Training of the Baseline Model
+4.1 The Choice of TensorFlow Lite
+4.2 Model Architecture
+4.3 Training Dataset
+4.4 Label Reorganization
+4.5 Preprocessing
+4.6 Feature Extraction
+4.7 Feature Selection
+
+
+
+Commits History: -> 14 commits
+
+Commits on Jul 11, 2025
+  - New version of the model
+    - I changed the .tflite model with a more accurate one
+
+Commits on Jul 9, 2025
+  - Inferences and notifications update
+    - MentalWorkloadProcessor now starts 35 seconds after the EEG device is connected
+    - 32 second signal windows are now used for analysis, instead of 1-second windows
+    - The inference loop is executed every 32 seconds
+    - Saving predicted workload levels to the database has been removed
+    - The first fatigue notification is triggered when the mode of the last 5 predictions indicates a fatigue level ≥ 2
+    (fatigue is evaluated every 160 seconds <-- 5 inferences, one every 32 seconds)
+    - Subsequent notifications are sent every 18 inferences (576 seconds) if the mode of the predictions indicates
+    a fatigue level ≥ 2 (fatigue notification) or < 2 (relaxed notification)
+    - The first notification now is always related to fatigue
+
+Commits on Jul 5, 2025
+  - Wavelet transformation and SavitzyGolay filter for artifact removal AndreaZanin02
+      Preprocessed EEG samples before feature extraction using:
+      - Savitzky-Golay filtering
+      - Wavelet transformation
+      This step removes noise and artifacts prior to computing the 15 features.
+
+Commits on Jun 16, 2025
+  - Update MentalWorkloadProcessor.kt AndreaZanin02
+  - Checkbox control added and getDatabase fixed AndreaZanin02
+
+Commits on Jun 15, 2025
+  - Other import corrections AndreaZanin02
+  - Changed the name of the model AndreaZanin02
+  - Imports correction AndreaZanin02
+  - New Notification Logic AndreaZanin02
+      Change in the notification logic like we have seen during the call
+
+Commits on Jun 14, 2025
+  - Workload Notification AndreaZanin02
+    - Combined the EEG sampling and inference logic into one unified background service.
+    - Inference with the .tflite model now runs automatically while the EEG device is connected.
+    - Predicted fatigue levels along with timestamps are stored in the `PredictedLevelEntity` DAO.
+    - Added a configurable notification system: the user is notified if `nOccurence` consecutive predictions exceed a `threshold` (currently set to 5 predictions ≥ level 2).
+
+Commits on Jun 13, 2025
+  - Created model.h5 AndreaZanin02
+
+Commits on Jun 12, 2025
+  - Added a dependency in build.grandle AndreaZanin02
+    I added the dependency for FFT library (used in the featureExtraction class)
+
+Commits on Jun 11, 2025
+  - Added Class Feature Extraction AndreaZanin02
+    - Added a new query method in SampleEegDao.kt to fetch ordered EEG samples
+    - Moved feature_extraction.kt to the utils folder and refactored it into a class
+    - Created EegRepository.kt to handle data retrieval from the database and prepare it for feature extraction
+
+Commits on Jun 10, 2025
+  - Model and feature_extraction.kt AndreaZanin02
+    I added the model (in the assets folder) and and a first version of feature_extraction.kt 
+
+
+Application kotlin files i wrote:
+  - In util folder:
+    - EegFeatureExtractor.kt
+    - EegPreprocessing.kt
+    - MentalWorkloadProcessor.kt
+    - SavitzkyGolay.kt
+  - In data/repository:
+    - EegRepository.kt
